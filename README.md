@@ -8,9 +8,9 @@ Convexity Desk is a portfolio-protection and hedge-execution desk for crypto tra
 
 ## Current Build Phase
 
-**Phase 0 — Planning Docs** *(complete)*
+**Phase 1 — Project Setup** *(complete)*
 
-No product code has been written yet. This phase establishes the documentation foundation and project structure before any implementation begins.
+Next.js 16.2.7 application initialized with TypeScript strict mode, Tailwind CSS v4, shadcn/ui, lucide-react, recharts, framer-motion, clsx, tailwind-merge, cva, and zod. All 22 routes build cleanly with 0 TypeScript errors.
 
 ---
 
@@ -19,7 +19,7 @@ No product code has been written yet. This phase establishes the documentation f
 | Item | Status |
 |------|--------|
 | Planning docs | ✅ Complete |
-| Project setup (Next.js) | ⏳ Pending — Phase 1 |
+| Project setup (Next.js) | ✅ Complete |
 | Design system | ⏳ Pending — Phase 2 |
 | Landing page | ⏳ Pending — Phase 3–4 |
 | Dashboard shell | ⏳ Pending — Phase 5 |
@@ -59,20 +59,28 @@ The core product flow is:
 
 ## Completed Features
 
-- [x] README.md (this file) — single source of truth
+- [x] README.md — single source of truth
 - [x] WAVE_PROGRESS.md — hackathon progress tracker
 - [x] ARCHITECTURE.md — system architecture overview
 - [x] docs/PRD.md — full product requirements document
-- [x] .env.example — all required environment variables
-- [x] Initial folder structure plan
+- [x] .env.example — all environment variables documented
+- [x] Next.js 16.2.7 with App Router initialized
+- [x] TypeScript strict mode configured
+- [x] Tailwind CSS v4 configured
+- [x] shadcn/ui initialized (Tailwind v4 compatible)
+- [x] lucide-react, recharts, framer-motion, clsx, tailwind-merge, cva, zod installed
+- [x] Convexity Desk dark theme set in globals.css
+- [x] Space Grotesk heading font configured
+- [x] All 22 routes created (5 marketing + 6 app + 10 API + 1 404)
+- [x] Core TypeScript types defined in src/types/index.ts
+- [x] .gitignore configured
+- [x] Production build passes: 0 TypeScript errors, 0 build errors
 
 ---
 
 ## Pending Features
 
-- [ ] Next.js project initialization
-- [ ] TypeScript + Tailwind setup
-- [ ] Design system primitives
+- [ ] Design system primitives (Phase 2)
 - [ ] Landing page (public marketing)
 - [ ] Dashboard shell (/app layout)
 - [ ] Portfolio module with demo data
@@ -90,7 +98,7 @@ The core product flow is:
 
 | Layer | Choice |
 |-------|--------|
-| Framework | Next.js 14+ (App Router) |
+| Framework | Next.js 16.2.7 (App Router) |
 | Language | TypeScript (strict) |
 | Styling | Tailwind CSS |
 | UI Components | shadcn/ui + lucide-react |
@@ -221,7 +229,7 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 | SoSoValue | ⏳ Not yet configured | Adapter pending Phase 8 |
 | SoDEX Market | ⏳ Not yet configured | Adapter pending Phase 7 |
 | Portfolio Data | ⏳ Not yet configured | Demo data pending Phase 6 |
-| Overall Mode | `demo` | Phase 0 — no code yet |
+| Overall Mode | `demo` | Phase 1 — placeholder routes only |
 
 All live/fallback/mock status will be clearly labelled in the UI once implemented. The app will never claim mock data is live.
 
@@ -229,7 +237,7 @@ All live/fallback/mock status will be clearly labelled in the UI once implemente
 
 ## Known Issues
 
-- None (Phase 0 — no code written yet)
+- None — all 22 routes build cleanly
 
 ---
 
@@ -238,7 +246,7 @@ All live/fallback/mock status will be clearly labelled in the UI once implemente
 | Phase | Description | Status |
 |-------|-------------|--------|
 | 0 | Planning docs | ✅ Complete |
-| 1 | Next.js project setup | ⏳ Pending |
+| 1 | Next.js project setup | ✅ Complete |
 | 2 | Design system + layout primitives | ⏳ Pending |
 | 3 | Landing page — header + hero | ⏳ Pending |
 | 4 | Landing page — story sections + footer | ⏳ Pending |
@@ -303,13 +311,14 @@ npm run dev
 | Date | Phase | Description |
 |------|-------|-------------|
 | 2026-06-01 | Phase 0 | Initialized planning docs — README, WAVE_PROGRESS, ARCHITECTURE, PRD, .env.example |
+| 2026-06-01 | Phase 1 | Next.js 16.2.7 project setup — Tailwind v4, shadcn/ui, all packages, 22 routes, TypeScript types, dark theme |
 
 ---
 
 ## Next Recommended Build Step
 
-**Phase 1: Project Setup**
+**Phase 2: Design System and Layout Primitives**
 
-Initialize the Next.js application with TypeScript, Tailwind CSS, shadcn/ui, lucide-react, recharts, and framer-motion. Create base app routes with placeholder pages. Ensure all routes load without errors.
+Create the visual foundation: font tokens, color tokens, and reusable layout/UI primitives (Container, Section, SectionHeader, Badge, PrimaryButton, SecondaryButton, CardShell, GradientText). No page content yet — just the system that all future pages will use.
 
-Do not start Phase 1 until explicitly instructed.
+Do not start Phase 2 until explicitly instructed.

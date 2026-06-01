@@ -37,16 +37,52 @@ Wave 2 must not be mock-only. At minimum one genuine live read integration must 
 
 ---
 
-### Phase 1 — Project Setup ⏳ Pending
+### Phase 1 — Project Setup ✅ Complete
 
-Tasks:
-- Initialize Next.js 14+ with App Router
-- Configure TypeScript (strict mode)
-- Install and configure Tailwind CSS
-- Add shadcn/ui
-- Add lucide-react, recharts, framer-motion
-- Create base routes with placeholder pages
-- Verify all routes load
+**Date:** 2026-06-01
+
+**What was done:**
+- Initialized Next.js 16.2.7 with App Router and TypeScript strict mode
+- Configured Tailwind CSS v4 (CSS-based configuration)
+- Initialized shadcn/ui (Tailwind v4 compatible)
+- Installed: lucide-react, recharts, framer-motion, clsx, tailwind-merge, class-variance-authority, zod
+- Set Convexity Desk dark theme in globals.css (brand colors: #7CFFB2 primary, #05070D background)
+- Configured Space Grotesk heading font
+- Created all 22 routes (5 marketing + 6 app + 10 API + 1 404) — all with placeholder pages
+- Created src/types/index.ts with all core TypeScript types (Portfolio, RiskScan, HedgePlan, etc.)
+- Created .gitignore
+- Production build passes: 0 TypeScript errors, 0 build errors
+
+**Files created:**
+- `src/app/layout.tsx` (root layout with fonts + dark class)
+- `src/app/globals.css` (Convexity Desk theme)
+- `src/app/(marketing)/layout.tsx`
+- `src/app/(marketing)/page.tsx` (/ route)
+- `src/app/(marketing)/how-it-works/page.tsx`
+- `src/app/(marketing)/methodology/page.tsx`
+- `src/app/(marketing)/docs/page.tsx`
+- `src/app/(marketing)/about/page.tsx`
+- `src/app/app/layout.tsx` (dashboard shell placeholder)
+- `src/app/app/page.tsx` (/app route)
+- `src/app/app/portfolio/page.tsx`
+- `src/app/app/scan/page.tsx`
+- `src/app/app/hedge/page.tsx`
+- `src/app/app/outcomes/page.tsx`
+- `src/app/app/settings/page.tsx`
+- `src/app/api/status/route.ts`
+- `src/app/api/portfolio/demo/route.ts`
+- `src/app/api/scan/run/route.ts`
+- `src/app/api/evidence/route.ts`
+- `src/app/api/hedge/generate/route.ts`
+- `src/app/api/hedge/preview/route.ts`
+- `src/app/api/hedge/confirm/route.ts`
+- `src/app/api/outcomes/route.ts`
+- `src/app/api/market/sodex/route.ts`
+- `src/app/api/intelligence/sosovalue/route.ts`
+- `src/types/index.ts`
+- `.gitignore`
+
+---
 
 ---
 
@@ -268,3 +304,4 @@ These limitations are intentional for Wave 2 and will be addressed in Wave 3.
 | Date | Phase | Entry |
 |------|-------|-------|
 | 2026-06-01 | Phase 0 | Project initialized — planning docs created |
+| 2026-06-01 | Phase 1 | Next.js 16 + Tailwind v4 + shadcn/ui + all packages — 22 routes, types, dark theme — 0 TS errors |
