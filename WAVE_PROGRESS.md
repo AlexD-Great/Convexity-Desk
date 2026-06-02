@@ -145,17 +145,23 @@ Wave 2 must not be mock-only. At minimum one genuine live read integration must 
 
 ---
 
-### Phase 4 — Landing Page: Story Sections ⏳ Pending
+### Phase 4 — Landing Page: Story Sections ✅ Complete
 
-Tasks:
-- Problem section
-- How It Works section
-- Product Preview scene
-- Feature grid
-- Ecosystem Fit section
-- Why Different comparison
-- Final CTA section
-- Footer (copyright 2026)
+**Date:** 2026-06-02
+
+**What was done:**
+- ProblemSection — 4 pain point cards (late news, noisy signals, compounding risk, reactive timing)
+- HowItWorksSection — 6 numbered steps with icons + flow label arrow chain
+- ProductPreviewSection — full-width mock panel: Danger Score 78/100, 5 factor breakdown, 4 evidence cards (severity-colored), plain English summary
+- FeatureGrid — 8 feature cards in 4-column grid with per-feature accent colors
+- EcosystemSection — SoSoValue, SoDEX, SSI Index, ValueChain cards with role, description, badge, and bullet points
+- ComparisonSection — 6-row table: Other Tools vs Convexity Desk with X/Check icons
+- CTASection — full-width CTA with gradient headline, Launch Desk + Read Methodology buttons
+- Footer — 4 link columns (Product/Resources/Ecosystem/Buildathon) + © 2026 copyright + disclaimer
+- All sections have scroll-triggered framer-motion animations (whileInView, once:true)
+- Alternating bg colors (#05070d / #080d1a) for visual rhythm between sections
+
+**Build result:** 25 routes, 0 TypeScript errors, 0 build errors
 
 ---
 
@@ -346,3 +352,4 @@ These limitations are intentional for Wave 2 and will be addressed in Wave 3.
 | 2026-06-01 | Phase 1 | Next.js 16 + Tailwind v4 + shadcn/ui + all packages — 22 routes, types, dark theme — 0 TS errors |
 | 2026-06-02 | Phase 2 | Design system — 8 shared primitives (Container, Section, SectionHeader, Badge×10, PrimaryButton, SecondaryButton, CardShell×5, GradientText) — 0 errors |
 | 2026-06-02 | Phase 3 | Landing page header + hero — Navbar (sticky/blur/mobile), HeroSection (split layout, animations), HeroDashboardPreview (realistic product UI) |
+| 2026-06-02 | Phase 4 | Full landing page — ProblemSection, HowItWorksSection, ProductPreviewSection, FeatureGrid, EcosystemSection, ComparisonSection, CTASection, Footer (2026) |

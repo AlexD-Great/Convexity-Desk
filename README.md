@@ -8,9 +8,9 @@ Convexity Desk is a portfolio-protection and hedge-execution desk for crypto tra
 
 ## Current Build Phase
 
-**Phase 3 — Premium Landing Page: Header and Hero** *(complete)*
+**Phase 4 — Premium Landing Page: Story Sections + Footer** *(complete)*
 
-Sticky Navbar with scroll-triggered blur, logo, nav links, mobile hamburger menu. Full-viewport hero with radial glow background, dot grid, animated text content, and HeroDashboardPreview card showing Danger Score, risk factors, portfolio exposure, evidence cards, and hedge plan. 25 routes, 0 TypeScript errors.
+Complete public landing page. ProblemSection (4 pain point cards), HowItWorksSection (6 numbered steps + flow label), ProductPreviewSection (large mock risk scan panel), FeatureGrid (8 features), EcosystemSection (SoSoValue/SoDEX/SSI/ValueChain), ComparisonSection (6-row table), CTASection, Footer (4 columns + 2026 copyright + disclaimer). All sections have scroll-triggered animations. 0 TS errors.
 
 ---
 
@@ -22,7 +22,7 @@ Sticky Navbar with scroll-triggered blur, logo, nav links, mobile hamburger menu
 | Project setup (Next.js) | ✅ Complete |
 | Design system | ✅ Complete |
 | Landing page (header + hero) | ✅ Complete |
-| Landing page (story sections) | ⏳ Pending — Phase 4 |
+| Landing page (story sections) | ✅ Complete |
 | Dashboard shell | ⏳ Pending — Phase 5 |
 | Portfolio module | ⏳ Pending — Phase 6 |
 | SoDEX adapter | ⏳ Pending — Phase 7 |
@@ -257,7 +257,7 @@ All live/fallback/mock status will be clearly labelled in the UI once implemente
 | 1 | Next.js project setup | ✅ Complete |
 | 2 | Design system + layout primitives | ✅ Complete |
 | 3 | Landing page — header + hero | ✅ Complete |
-| 4 | Landing page — story sections + footer | ⏳ Pending |
+| 4 | Landing page — story sections + footer | ✅ Complete |
 | 5 | Dashboard shell + navigation | ⏳ Pending |
 | 6 | Portfolio module with demo data | ⏳ Pending |
 | 7 | SoDEX market data adapter | ⏳ Pending |
@@ -322,13 +322,14 @@ npm run dev
 | 2026-06-01 | Phase 1 | Next.js 16.2.7 project setup — Tailwind v4, shadcn/ui, all packages, 22 routes, TypeScript types, dark theme |
 | 2026-06-02 | Phase 2 | Design system — Container, Section, SectionHeader, Badge, PrimaryButton, SecondaryButton, CardShell, GradientText, /design-system preview |
 | 2026-06-02 | Phase 3 | Landing page header + hero — Navbar (sticky/blur/mobile), HeroSection (split layout, animations), HeroDashboardPreview (realistic product UI) |
+| 2026-06-02 | Phase 4 | Full landing page — ProblemSection, HowItWorksSection, ProductPreviewSection, FeatureGrid, EcosystemSection, ComparisonSection, CTASection, Footer (2026) |
 
 ---
 
 ## Next Recommended Build Step
 
-**Phase 4: Premium Landing Page — Story Sections + Footer**
+**Phase 5: App Shell and Navigation**
 
-Build the remaining landing page sections: Problem, How It Works, Product Preview scene, Feature Grid, Ecosystem Fit, Why Different comparison, Final CTA, and Footer (2026 copyright). Add subtle scroll animations. Ensure consistent spacing and no cramped layout.
+Build the full dashboard shell: Sidebar with navigation links and status badges, Topbar with market status, API status, and demo mode badge, and properly structured placeholder screens for all /app/* routes. No product logic yet — just the shell.
 
-Do not start Phase 4 until explicitly instructed.
+Do not start Phase 5 until explicitly instructed.
