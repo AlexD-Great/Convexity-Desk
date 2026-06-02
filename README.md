@@ -8,7 +8,9 @@ Convexity Desk is a portfolio-protection and hedge-execution desk for crypto tra
 
 ## Current Build Phase
 
-**Phase 4 — Premium Landing Page: Story Sections + Footer** *(complete)*
+**Phase 5 — App Shell and Navigation** *(complete)*
+
+Full dashboard shell with Sidebar (logo, active nav links, mode badge, wallet placeholder), Topbar (page title, ApiStatusBadge, fallback badge, wallet button), DemoModeBanner, and MetricCard. All /app/* screens updated with proper layouts. 0 TS errors.
 
 Complete public landing page. ProblemSection (4 pain point cards), HowItWorksSection (6 numbered steps + flow label), ProductPreviewSection (large mock risk scan panel), FeatureGrid (8 features), EcosystemSection (SoSoValue/SoDEX/SSI/ValueChain), ComparisonSection (6-row table), CTASection, Footer (4 columns + 2026 copyright + disclaimer). All sections have scroll-triggered animations. 0 TS errors.
 
@@ -23,7 +25,7 @@ Complete public landing page. ProblemSection (4 pain point cards), HowItWorksSec
 | Design system | ✅ Complete |
 | Landing page (header + hero) | ✅ Complete |
 | Landing page (story sections) | ✅ Complete |
-| Dashboard shell | ⏳ Pending — Phase 5 |
+| Dashboard shell | ✅ Complete |
 | Portfolio module | ⏳ Pending — Phase 6 |
 | SoDEX adapter | ⏳ Pending — Phase 7 |
 | SoSoValue adapter | ⏳ Pending — Phase 8 |
@@ -83,6 +85,14 @@ The core product flow is:
 - [x] HeroDashboardPreview — realistic fake dashboard (Danger Score, risk factors, portfolio exposure, evidence, hedge plan)
 - [x] HeroSection — full-viewport, background glows + dot grid, framer-motion stagger, split layout
 - [x] Landing page at / wired up with Navbar + HeroSection
+- [x] DashboardShell (Sidebar + Topbar + DemoModeBanner + main area)
+- [x] Sidebar — logo, active nav links (usePathname), demo mode badge, wallet placeholder
+- [x] Topbar — page title, ApiStatusBadge (fetches /api/status), fallback badge, wallet button
+- [x] MetricCard — reusable dashboard metric component
+- [x] DemoModeBanner — persistent demo mode notice with settings link
+- [x] ApiStatusBadge — client component fetching /api/status
+- [x] /app overview with metric cards, risk snapshot, action prompt, quick links
+- [x] All /app/* screens updated with structured empty states
 
 ---
 
@@ -258,7 +268,7 @@ All live/fallback/mock status will be clearly labelled in the UI once implemente
 | 2 | Design system + layout primitives | ✅ Complete |
 | 3 | Landing page — header + hero | ✅ Complete |
 | 4 | Landing page — story sections + footer | ✅ Complete |
-| 5 | Dashboard shell + navigation | ⏳ Pending |
+| 5 | Dashboard shell + navigation | ✅ Complete |
 | 6 | Portfolio module with demo data | ⏳ Pending |
 | 7 | SoDEX market data adapter | ⏳ Pending |
 | 8 | SoSoValue intelligence adapter | ⏳ Pending |
@@ -323,13 +333,14 @@ npm run dev
 | 2026-06-02 | Phase 2 | Design system — Container, Section, SectionHeader, Badge, PrimaryButton, SecondaryButton, CardShell, GradientText, /design-system preview |
 | 2026-06-02 | Phase 3 | Landing page header + hero — Navbar (sticky/blur/mobile), HeroSection (split layout, animations), HeroDashboardPreview (realistic product UI) |
 | 2026-06-02 | Phase 4 | Full landing page — ProblemSection, HowItWorksSection, ProductPreviewSection, FeatureGrid, EcosystemSection, ComparisonSection, CTASection, Footer (2026) |
+| 2026-06-02 | Phase 5 | Dashboard shell — DashboardShell, Sidebar (active nav), Topbar (API status), DemoModeBanner, MetricCard, all /app/* screens updated |
 
 ---
 
 ## Next Recommended Build Step
 
-**Phase 5: App Shell and Navigation**
+**Phase 6: Portfolio Module**
 
-Build the full dashboard shell: Sidebar with navigation links and status badges, Topbar with market status, API status, and demo mode badge, and properly structured placeholder screens for all /app/* routes. No product logic yet — just the shell.
+Wire up the demo portfolio API route, build the portfolio table, allocation chart, exposure buckets, and concentration warning. All data served from /api/portfolio/demo. No wallet connection yet.
 
-Do not start Phase 5 until explicitly instructed.
+Do not start Phase 6 until explicitly instructed.

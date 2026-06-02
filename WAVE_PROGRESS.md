@@ -165,13 +165,40 @@ Wave 2 must not be mock-only. At minimum one genuine live read integration must 
 
 ---
 
-### Phase 5 — Dashboard Shell ⏳ Pending
+### Phase 5 — Dashboard Shell ✅ Complete
 
-Tasks:
-- /app dashboard layout
-- Sidebar with navigation links
-- Topbar with status badges
-- Placeholder route pages
+**Date:** 2026-06-02
+
+**What was done:**
+- DashboardShell: manages mobile sidebar state, renders Sidebar + Topbar + DemoModeBanner + main content
+- Sidebar: logo with Shield icon, "Demo Mode" pulse badge, primary nav (Overview/Portfolio/Risk Scan/Hedge Plan/Outcome Ledger) with active state via usePathname, secondary nav (Methodology/Settings), wallet placeholder (Wave 3), mobile overlay with close button
+- Topbar: mobile hamburger, page title derived from pathname, ApiStatusBadge (fetches /api/status), fallback badge, disabled Connect Wallet button (Wave 3)
+- MetricCard: reusable metric with label, value, sublabel, accent color, icon
+- DemoModeBanner: persistent thin banner with demo mode notice and settings link
+- ApiStatusBadge: client component, fetches /api/status, shows live/demo/mixed with color dot
+- /app overview: 4 metric cards (portfolio value, danger score, hedge coverage, top risk driver), risk snapshot panel with factor bars, hedge suggestion card, quick links
+- All /app/* screens: proper page headers, structured empty states showing what's coming and when
+- app/layout.tsx updated to use DashboardShell (replaces old placeholder)
+
+**Files created/modified:**
+- `src/components/dashboard/DashboardShell.tsx` (new)
+- `src/components/dashboard/Sidebar.tsx` (new)
+- `src/components/dashboard/Topbar.tsx` (new)
+- `src/components/dashboard/MetricCard.tsx` (new)
+- `src/components/dashboard/DemoModeBanner.tsx` (new)
+- `src/components/dashboard/ApiStatusBadge.tsx` (new)
+- `src/components/dashboard/index.ts` (new)
+- `src/app/app/layout.tsx` (updated)
+- `src/app/app/page.tsx` (updated — real overview)
+- `src/app/app/portfolio/page.tsx` (updated)
+- `src/app/app/scan/page.tsx` (updated)
+- `src/app/app/hedge/page.tsx` (updated)
+- `src/app/app/outcomes/page.tsx` (updated)
+- `src/app/app/settings/page.tsx` (updated)
+
+**Build result:** 25 routes, 0 TypeScript errors, 0 build errors
+
+---
 
 ---
 
@@ -353,3 +380,4 @@ These limitations are intentional for Wave 2 and will be addressed in Wave 3.
 | 2026-06-02 | Phase 2 | Design system — 8 shared primitives (Container, Section, SectionHeader, Badge×10, PrimaryButton, SecondaryButton, CardShell×5, GradientText) — 0 errors |
 | 2026-06-02 | Phase 3 | Landing page header + hero — Navbar (sticky/blur/mobile), HeroSection (split layout, animations), HeroDashboardPreview (realistic product UI) |
 | 2026-06-02 | Phase 4 | Full landing page — ProblemSection, HowItWorksSection, ProductPreviewSection, FeatureGrid, EcosystemSection, ComparisonSection, CTASection, Footer (2026) |
+| 2026-06-02 | Phase 5 | Dashboard shell — DashboardShell, Sidebar (active nav/mobile), Topbar (API status), MetricCard, DemoModeBanner, all /app/* updated |
