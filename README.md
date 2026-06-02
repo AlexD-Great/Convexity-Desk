@@ -8,9 +8,9 @@ Convexity Desk is a portfolio-protection and hedge-execution desk for crypto tra
 
 ## Current Build Phase
 
-**Phase 2 — Design System and Layout Primitives** *(complete)*
+**Phase 3 — Premium Landing Page: Header and Hero** *(complete)*
 
-All shared UI primitives built: Container, Section, SectionHeader, Badge (10 variants), PrimaryButton, SecondaryButton, CardShell (5 variants), GradientText. Design system preview page at `/design-system`. 25 routes, 0 TypeScript errors.
+Sticky Navbar with scroll-triggered blur, logo, nav links, mobile hamburger menu. Full-viewport hero with radial glow background, dot grid, animated text content, and HeroDashboardPreview card showing Danger Score, risk factors, portfolio exposure, evidence cards, and hedge plan. 25 routes, 0 TypeScript errors.
 
 ---
 
@@ -21,7 +21,8 @@ All shared UI primitives built: Container, Section, SectionHeader, Badge (10 var
 | Planning docs | ✅ Complete |
 | Project setup (Next.js) | ✅ Complete |
 | Design system | ✅ Complete |
-| Landing page | ⏳ Pending — Phase 3–4 |
+| Landing page (header + hero) | ✅ Complete |
+| Landing page (story sections) | ⏳ Pending — Phase 4 |
 | Dashboard shell | ⏳ Pending — Phase 5 |
 | Portfolio module | ⏳ Pending — Phase 6 |
 | SoDEX adapter | ⏳ Pending — Phase 7 |
@@ -78,6 +79,10 @@ The core product flow is:
 - [x] Design system: Container, Section, SectionHeader, Badge (10 variants), PrimaryButton, SecondaryButton, CardShell (5 variants), GradientText
 - [x] Barrel export via src/components/shared/index.ts
 - [x] /design-system preview page for visual verification
+- [x] Navbar — sticky, scroll-triggered backdrop blur, logo, nav links, mobile hamburger
+- [x] HeroDashboardPreview — realistic fake dashboard (Danger Score, risk factors, portfolio exposure, evidence, hedge plan)
+- [x] HeroSection — full-viewport, background glows + dot grid, framer-motion stagger, split layout
+- [x] Landing page at / wired up with Navbar + HeroSection
 
 ---
 
@@ -251,7 +256,7 @@ All live/fallback/mock status will be clearly labelled in the UI once implemente
 | 0 | Planning docs | ✅ Complete |
 | 1 | Next.js project setup | ✅ Complete |
 | 2 | Design system + layout primitives | ✅ Complete |
-| 3 | Landing page — header + hero | ⏳ Pending |
+| 3 | Landing page — header + hero | ✅ Complete |
 | 4 | Landing page — story sections + footer | ⏳ Pending |
 | 5 | Dashboard shell + navigation | ⏳ Pending |
 | 6 | Portfolio module with demo data | ⏳ Pending |
@@ -316,13 +321,14 @@ npm run dev
 | 2026-06-01 | Phase 0 | Initialized planning docs — README, WAVE_PROGRESS, ARCHITECTURE, PRD, .env.example |
 | 2026-06-01 | Phase 1 | Next.js 16.2.7 project setup — Tailwind v4, shadcn/ui, all packages, 22 routes, TypeScript types, dark theme |
 | 2026-06-02 | Phase 2 | Design system — Container, Section, SectionHeader, Badge, PrimaryButton, SecondaryButton, CardShell, GradientText, /design-system preview |
+| 2026-06-02 | Phase 3 | Landing page header + hero — Navbar (sticky/blur/mobile), HeroSection (split layout, animations), HeroDashboardPreview (realistic product UI) |
 
 ---
 
 ## Next Recommended Build Step
 
-**Phase 3: Premium Landing Page — Header and Hero**
+**Phase 4: Premium Landing Page — Story Sections + Footer**
 
-Build only the sticky navbar and hero section, making them excellent before the rest of the page. The header and hero must be polished enough for a judge to see the product value in 5 seconds. Uses the design system primitives from Phase 2.
+Build the remaining landing page sections: Problem, How It Works, Product Preview scene, Feature Grid, Ecosystem Fit, Why Different comparison, Final CTA, and Footer (2026 copyright). Add subtle scroll animations. Ensure consistent spacing and no cramped layout.
 
-Do not start Phase 3 until explicitly instructed.
+Do not start Phase 4 until explicitly instructed.

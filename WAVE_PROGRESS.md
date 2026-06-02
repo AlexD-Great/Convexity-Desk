@@ -121,12 +121,27 @@ Wave 2 must not be mock-only. At minimum one genuine live read integration must 
 
 ---
 
-### Phase 3 — Landing Page: Header + Hero ⏳ Pending
+### Phase 3 — Landing Page: Header + Hero ✅ Complete
 
-Tasks:
-- Premium sticky navbar with logo and nav links
-- Hero section with CTA and dashboard preview card
-- Mobile responsiveness
+**Date:** 2026-06-02
+
+**What was done:**
+- Navbar: sticky top-0 with scroll-triggered backdrop-blur, logo (Shield icon + "ConvexityDesk" wordmark), 4 nav links, View Demo + Launch Desk CTAs, mobile hamburger menu with slide-down panel
+- HeroDashboardPreview: realistic product UI card showing Danger Score (78/100 HIGH RISK), 4 risk factor bars, portfolio exposure stacked bar (BTC/ETH/SOL/USDC), 3 evidence cards, hedge plan (Short BTC-PERP $12K 42% coverage), Fallback Mode badge
+- HeroSection: full-viewport, radial glow background, dot grid pattern, framer-motion staggered animations (5 sections), GradientText headline, CTA button row, 3 trust indicators, split layout (text left, preview right)
+- Marketing layout updated to include Navbar on all public pages
+- Landing page at / wired up to HeroSection
+
+**Files created/modified:**
+- `src/components/marketing/Navbar.tsx` (new)
+- `src/components/marketing/HeroDashboardPreview.tsx` (new)
+- `src/components/marketing/HeroSection.tsx` (new)
+- `src/app/(marketing)/layout.tsx` (updated — added Navbar)
+- `src/app/(marketing)/page.tsx` (updated — uses HeroSection)
+
+**Build result:** 25 routes, 0 TypeScript errors, 0 build errors
+
+---
 
 ---
 
@@ -330,3 +345,4 @@ These limitations are intentional for Wave 2 and will be addressed in Wave 3.
 | 2026-06-01 | Phase 0 | Project initialized — planning docs created |
 | 2026-06-01 | Phase 1 | Next.js 16 + Tailwind v4 + shadcn/ui + all packages — 22 routes, types, dark theme — 0 TS errors |
 | 2026-06-02 | Phase 2 | Design system — 8 shared primitives (Container, Section, SectionHeader, Badge×10, PrimaryButton, SecondaryButton, CardShell×5, GradientText) — 0 errors |
+| 2026-06-02 | Phase 3 | Landing page header + hero — Navbar (sticky/blur/mobile), HeroSection (split layout, animations), HeroDashboardPreview (realistic product UI) |
