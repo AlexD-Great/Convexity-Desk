@@ -8,9 +8,9 @@ Convexity Desk is a portfolio-protection and hedge-execution desk for crypto tra
 
 ## Current Build Phase
 
-**Phase 1 — Project Setup** *(complete)*
+**Phase 2 — Design System and Layout Primitives** *(complete)*
 
-Next.js 16.2.7 application initialized with TypeScript strict mode, Tailwind CSS v4, shadcn/ui, lucide-react, recharts, framer-motion, clsx, tailwind-merge, cva, and zod. All 22 routes build cleanly with 0 TypeScript errors.
+All shared UI primitives built: Container, Section, SectionHeader, Badge (10 variants), PrimaryButton, SecondaryButton, CardShell (5 variants), GradientText. Design system preview page at `/design-system`. 25 routes, 0 TypeScript errors.
 
 ---
 
@@ -20,7 +20,7 @@ Next.js 16.2.7 application initialized with TypeScript strict mode, Tailwind CSS
 |------|--------|
 | Planning docs | ✅ Complete |
 | Project setup (Next.js) | ✅ Complete |
-| Design system | ⏳ Pending — Phase 2 |
+| Design system | ✅ Complete |
 | Landing page | ⏳ Pending — Phase 3–4 |
 | Dashboard shell | ⏳ Pending — Phase 5 |
 | Portfolio module | ⏳ Pending — Phase 6 |
@@ -75,6 +75,9 @@ The core product flow is:
 - [x] Core TypeScript types defined in src/types/index.ts
 - [x] .gitignore configured
 - [x] Production build passes: 0 TypeScript errors, 0 build errors
+- [x] Design system: Container, Section, SectionHeader, Badge (10 variants), PrimaryButton, SecondaryButton, CardShell (5 variants), GradientText
+- [x] Barrel export via src/components/shared/index.ts
+- [x] /design-system preview page for visual verification
 
 ---
 
@@ -247,7 +250,7 @@ All live/fallback/mock status will be clearly labelled in the UI once implemente
 |-------|-------------|--------|
 | 0 | Planning docs | ✅ Complete |
 | 1 | Next.js project setup | ✅ Complete |
-| 2 | Design system + layout primitives | ⏳ Pending |
+| 2 | Design system + layout primitives | ✅ Complete |
 | 3 | Landing page — header + hero | ⏳ Pending |
 | 4 | Landing page — story sections + footer | ⏳ Pending |
 | 5 | Dashboard shell + navigation | ⏳ Pending |
@@ -312,13 +315,14 @@ npm run dev
 |------|-------|-------------|
 | 2026-06-01 | Phase 0 | Initialized planning docs — README, WAVE_PROGRESS, ARCHITECTURE, PRD, .env.example |
 | 2026-06-01 | Phase 1 | Next.js 16.2.7 project setup — Tailwind v4, shadcn/ui, all packages, 22 routes, TypeScript types, dark theme |
+| 2026-06-02 | Phase 2 | Design system — Container, Section, SectionHeader, Badge, PrimaryButton, SecondaryButton, CardShell, GradientText, /design-system preview |
 
 ---
 
 ## Next Recommended Build Step
 
-**Phase 2: Design System and Layout Primitives**
+**Phase 3: Premium Landing Page — Header and Hero**
 
-Create the visual foundation: font tokens, color tokens, and reusable layout/UI primitives (Container, Section, SectionHeader, Badge, PrimaryButton, SecondaryButton, CardShell, GradientText). No page content yet — just the system that all future pages will use.
+Build only the sticky navbar and hero section, making them excellent before the rest of the page. The header and hero must be polished enough for a judge to see the product value in 5 seconds. Uses the design system primitives from Phase 2.
 
-Do not start Phase 2 until explicitly instructed.
+Do not start Phase 3 until explicitly instructed.

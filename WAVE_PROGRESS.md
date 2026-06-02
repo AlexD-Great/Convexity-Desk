@@ -86,14 +86,38 @@ Wave 2 must not be mock-only. At minimum one genuine live read integration must 
 
 ---
 
-### Phase 2 — Design System ⏳ Pending
+### Phase 2 — Design System ✅ Complete
 
-Tasks:
-- Font configuration (Space Grotesk / Inter / Space Mono)
-- Color/theme tokens
-- Layout primitives: Container, Section, SectionHeader
-- UI primitives: Badge, PrimaryButton, SecondaryButton, CardShell, GradientText
-- Responsive grid rules
+**Date:** 2026-06-02
+
+**What was done:**
+- Created all 8 shared UI primitives using design system from PRD
+- Container — max-w-7xl, responsive horizontal padding
+- Section — consistent vertical padding (py-20 sm:py-28)
+- SectionHeader — eyebrow label, heading (Space Grotesk), subtitle, left/center alignment
+- Badge — 10 variants: default, primary, blue, success, warning, danger, live, fallback, mock, demo — uses CVA
+- PrimaryButton — #7CFFB2 bg, dark text, framer-motion hover/tap, sm/md/lg sizes, href or onClick
+- SecondaryButton — outline and ghost variants, framer-motion, matches primary sizing
+- CardShell — 5 variants: default, elevated, glow, warning, danger — padding control
+- GradientText — green-to-blue gradient, customizable from/to colors
+- Barrel export via src/components/shared/index.ts
+- /design-system preview page with all components rendered visually
+
+**Files created:**
+- `src/components/shared/Container.tsx`
+- `src/components/shared/Section.tsx`
+- `src/components/shared/SectionHeader.tsx`
+- `src/components/shared/Badge.tsx`
+- `src/components/shared/PrimaryButton.tsx`
+- `src/components/shared/SecondaryButton.tsx`
+- `src/components/shared/CardShell.tsx`
+- `src/components/shared/GradientText.tsx`
+- `src/components/shared/index.ts`
+- `src/app/(marketing)/design-system/page.tsx`
+
+**Build result:** 25 routes, 0 TypeScript errors, 0 build errors
+
+---
 
 ---
 
@@ -305,3 +329,4 @@ These limitations are intentional for Wave 2 and will be addressed in Wave 3.
 |------|-------|-------|
 | 2026-06-01 | Phase 0 | Project initialized — planning docs created |
 | 2026-06-01 | Phase 1 | Next.js 16 + Tailwind v4 + shadcn/ui + all packages — 22 routes, types, dark theme — 0 TS errors |
+| 2026-06-02 | Phase 2 | Design system — 8 shared primitives (Container, Section, SectionHeader, Badge×10, PrimaryButton, SecondaryButton, CardShell×5, GradientText) — 0 errors |
