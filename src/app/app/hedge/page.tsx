@@ -1,19 +1,21 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { ShieldCheck, ArrowRight, RefreshCw, Loader2 } from "lucide-react";
+import { ShieldCheck, ArrowRight, RefreshCw, Loader2, CheckCircle2 } from "lucide-react";
 import type { HedgePlan, RiskScan } from "@/types";
 import type { ExecutionPreview } from "@/lib/hedge/hedge-composer";
 import { HedgePlanCard } from "@/components/dashboard/HedgePlanCard";
 import { ExecutionPreviewCard } from "@/components/dashboard/ExecutionPreviewCard";
 import { DangerScoreGauge } from "@/components/dashboard/DangerScoreGauge";
+import { ConfirmationGate } from "@/components/dashboard/ConfirmationGate";
 import { CardShell } from "@/components/shared/CardShell";
 import { Badge } from "@/components/shared/Badge";
 import { PrimaryButton } from "@/components/shared/PrimaryButton";
 
-type PageState = "idle" | "generating" | "done" | "error";
+type PageState = "idle" | "generating" | "done" | "gate" | "confirmed" | "error";
 
 type GenerateResponse = {
   scan: RiskScan;
@@ -62,7 +64,7 @@ function IdleState({ onGenerate }: { onGenerate: () => void }) {
   );
 }
 
-// ─── Generating ────────────────────────────────────────────────────────
+// ─── Generating ───────────────────────────────────────────────────────
 
 function GeneratingState() {
   return (
@@ -92,13 +94,47 @@ function GeneratingState() {
   );
 }
 
-// ─── Results ───────────────────────────────────────────────────────────
+// ─── Confirmed ────────────────────────────────────────────────────────
+
+function ConfirmedState({ orderId }: { orderId: string }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.97 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="flex flex-col items-center justify-center gap-6 py-20 text-center"
+    >
+      <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-[#22c55e]/30 bg-[#22c55e]/10">
+        <CheckCircle2 className="h-8 w-8 text-[#22c55e]" />
+      </div>
+      <div className="space-y-2">
+        <p className="text-lg font-semibold text-white" style={{ fontFamily: "var(--font-space-grotesk)" }}>
+          Hedge preview confirmed
+        </p>
+        <p className="text-sm text-[#9ca3af]">
+          Simulated order recorded in the outcome ledger.
+        </p>
+        <p className="font-mono text-xs text-[#7cffb2]">Order ID: {orderId}</p>
+      </div>
+      <PrimaryButton href="/app/outcomes" size="lg">
+        View Outcome Ledger <ArrowRight className="h-4 w-4" />
+      </PrimaryButton>
+    </motion.div>
+  );
+}
+
+// ─── Results ──────────────────────────────────────────────────────────
 
 function ResultsState({
   result,
+  showGate,
+  onShowGate,
+  onConfirm,
   onRegenerate,
 }: {
   result: GenerateResponse;
+  showGate: boolean;
+  onShowGate: () => void;
+  onConfirm: () => Promise<void>;
   onRegenerate: () => void;
 }) {
   const { scan, hedgePlan, executionPreview, dataMode } = result;
@@ -117,7 +153,7 @@ function ResultsState({
             Hedge Plan Ready
           </h2>
           <p className="mt-1 text-sm text-[#9ca3af]">
-            Based on Danger Score {scan.dangerScore}/100 · {scan.riskLevel} · Demo portfolio
+            Danger Score {scan.dangerScore}/100 · {scan.riskLevel} · Demo portfolio
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
@@ -128,9 +164,11 @@ function ResultsState({
             <RefreshCw className="h-3.5 w-3.5" />
             Regenerate
           </button>
-          <PrimaryButton href="/app/outcomes" size="md">
-            Confirm Hedge Preview <ArrowRight className="h-4 w-4" />
-          </PrimaryButton>
+          {!showGate && (
+            <PrimaryButton size="md" onClick={onShowGate}>
+              Confirm Hedge Preview <ArrowRight className="h-4 w-4" />
+            </PrimaryButton>
+          )}
         </div>
       </div>
 
@@ -163,33 +201,57 @@ function ResultsState({
         <ExecutionPreviewCard preview={executionPreview} />
       </div>
 
-      {/* Confirm CTA */}
-      <div className="flex items-center justify-between rounded-xl border border-[#7cffb2]/20 bg-[#7cffb2]/[0.04] px-5 py-4 flex-wrap gap-4">
-        <div>
-          <p className="text-sm font-semibold text-white">
-            Ready to confirm this hedge preview?
-          </p>
-          <p className="mt-0.5 text-xs text-[#9ca3af]">
-            Confirmation gate, required disclaimers, and simulated execution — Phase 11.
-            No real trade will be placed in Wave 2.
-          </p>
+      {/* Confirmation gate */}
+      <AnimatePresence>
+        {showGate && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.3 }}
+          >
+            <ConfirmationGate
+              hedgePlan={hedgePlan}
+              dangerScore={scan.dangerScore}
+              onConfirm={onConfirm}
+              onCancel={() => onRegenerate()}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* CTA (only shown when gate is hidden) */}
+      {!showGate && (
+        <div className="flex items-center justify-between rounded-xl border border-[#7cffb2]/20 bg-[#7cffb2]/[0.04] px-5 py-4 flex-wrap gap-4">
+          <div>
+            <p className="text-sm font-semibold text-white">
+              Ready to confirm this hedge preview?
+            </p>
+            <p className="mt-0.5 text-xs text-[#9ca3af]">
+              Three required acknowledgements, then your simulated order is recorded in the outcome ledger.
+            </p>
+          </div>
+          <PrimaryButton size="md" onClick={onShowGate}>
+            Open Confirmation Gate <ArrowRight className="h-4 w-4" />
+          </PrimaryButton>
         </div>
-        <PrimaryButton href="/app/outcomes" size="md">
-          Confirm Hedge Preview <ArrowRight className="h-4 w-4" />
-        </PrimaryButton>
-      </div>
+      )}
     </motion.div>
   );
 }
 
-// ─── Page ──────────────────────────────────────────────────────────────
+// ─── Page ─────────────────────────────────────────────────────────────
 
 export default function HedgePage() {
+  const router = useRouter();
   const [state, setState] = useState<PageState>("idle");
   const [result, setResult] = useState<GenerateResponse | null>(null);
+  const [showGate, setShowGate] = useState(false);
+  const [confirmedOrderId, setConfirmedOrderId] = useState<string>("");
 
   const generate = async () => {
     setState("generating");
+    setShowGate(false);
     try {
       const res = await fetch("/api/hedge/generate", { method: "POST" });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -201,13 +263,26 @@ export default function HedgePage() {
     }
   };
 
+  const handleConfirm = async () => {
+    if (!result) return;
+    const res = await fetch("/api/hedge/confirm", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        hedgePlan: result.hedgePlan,
+        dangerScore: result.scan.dangerScore,
+      }),
+    });
+    if (!res.ok) throw new Error("Confirm failed");
+    const data = await res.json() as { orderId: string };
+    setConfirmedOrderId(data.orderId);
+    setState("confirmed");
+  };
+
   return (
     <div className="max-w-6xl">
       <div className="mb-6">
-        <h2
-          className="text-xl font-bold text-white"
-          style={{ fontFamily: "var(--font-space-grotesk)" }}
-        >
+        <h2 className="text-xl font-bold text-white" style={{ fontFamily: "var(--font-space-grotesk)" }}>
           Hedge Plan
         </h2>
         <p className="mt-1 text-sm text-[#9ca3af]">
@@ -228,7 +303,18 @@ export default function HedgePage() {
         )}
         {state === "done" && result && (
           <motion.div key="done" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            <ResultsState result={result} onRegenerate={() => setState("idle")} />
+            <ResultsState
+              result={result}
+              showGate={showGate}
+              onShowGate={() => setShowGate(true)}
+              onConfirm={handleConfirm}
+              onRegenerate={() => { setState("idle"); setShowGate(false); }}
+            />
+          </motion.div>
+        )}
+        {state === "confirmed" && (
+          <motion.div key="confirmed" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <ConfirmedState orderId={confirmedOrderId} />
           </motion.div>
         )}
         {state === "error" && (

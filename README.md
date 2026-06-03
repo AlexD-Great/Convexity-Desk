@@ -8,7 +8,9 @@ Convexity Desk is a portfolio-protection and hedge-execution desk for crypto tra
 
 ## Current Build Phase
 
-**Phase 10 — Hedge Composer and Execution Preview** *(complete)*
+**Phase 11 — Confirmation Gate and Outcome Ledger** *(complete)*
+
+`ConfirmationGate` — 3 required checkboxes, hedge summary strip, danger score context, progressive unlock, disclaimer. `OutcomeLedgerTable` — sortable by date, status badge per row, coverage before→after, order ID, notes. `/api/hedge/confirm` creates `OutcomeLedgerEntry` (status: pending, simulated, SIM-xxx order ID). `/api/outcomes` returns pre-seeded demo entries (avoided_loss, useful, neutral) plus session entries. `/app/outcomes` — metric cards, status filter tabs, full ledger table, persistence notice. `/app/hedge` updated with gate → confirmed state → outcome link. 0 TS errors.
 
 `src/lib/hedge/hedge-composer.ts` — instrument selection, danger score multiplier, hedge sizing (rounds to $1K), coverage % (hedge/hedgeable exposure), confidence score, rationale + risk builder, execution preview from SoDEX market data. `/api/hedge/generate` runs full pipeline (scan → compose → preview) in one POST. `/api/hedge/preview` refreshes preview only. `HedgePlanCard` (instrument, direction badge, size/coverage/confidence metric tiles, rationale, risks, stop condition). `ExecutionPreviewCard` (data rows, liquidity bar, categorised warnings). Full interactive `/app/hedge`: idle → generating → results (scan strip + gauge + plan + preview + confirm CTA) → error. 0 TS errors.
 
@@ -36,7 +38,7 @@ Demo portfolio data in `src/lib/data/demo-portfolio.ts`. `/api/portfolio/demo` r
 | SoSoValue adapter | ✅ Complete |
 | Risk scan engine | ✅ Complete |
 | Hedge composer | ✅ Complete |
-| Confirmation + ledger | ⏳ Pending — Phase 11 |
+| Confirmation + ledger | ✅ Complete |
 | Methodology + docs | ⏳ Pending — Phase 12 |
 | Wave 2 polish + deploy | ⏳ Pending — Phase 13 |
 
@@ -283,7 +285,7 @@ All live/fallback/mock status will be clearly labelled in the UI once implemente
 | 8 | SoSoValue intelligence adapter | ✅ Complete |
 | 9 | Convexity Risk Scan engine | ✅ Complete |
 | 10 | Hedge composer + execution preview | ✅ Complete |
-| 11 | Confirmation gate + outcome ledger | ⏳ Pending |
+| 11 | Confirmation gate + outcome ledger | ✅ Complete |
 | 12 | Methodology, docs, and settings pages | ⏳ Pending |
 | 13 | Wave 2 polish + Vercel deployment | ⏳ Pending |
 
@@ -352,8 +354,8 @@ npm run dev
 
 ## Next Recommended Build Step
 
-**Phase 11: Confirmation Gate and Outcome Ledger**
+**Phase 12: Methodology, Docs, and Settings Pages**
 
-Build the confirmation gate with required disclaimers, `/api/hedge/confirm` (simulated execution), outcome types, `/api/outcomes`, and full `/app/outcomes` screen with ledger table and status badges.
+Build proper `/methodology`, `/docs`, `/about` pages (upgrading stubs), and a fully interactive `/app/settings` page with mode toggles, API status indicators, and risk preference display.
 
-Do not start Phase 11 until explicitly instructed.
+Do not start Phase 12 until explicitly instructed.

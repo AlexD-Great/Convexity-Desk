@@ -370,14 +370,22 @@ Tasks:
 
 ---
 
-### Phase 11 — Confirmation Gate + Outcome Ledger ⏳ Pending
+### Phase 11 — Confirmation Gate + Outcome Ledger ✅ Complete
 
-Tasks:
-- Confirmation gate with required checkboxes and disclaimers
-- /api/hedge/confirm route (simulated Wave 2)
-- Outcome TypeScript types
-- /api/outcomes route
-- /app/outcomes page with status table
+**Date:** 2026-06-02
+
+**What was done:**
+- `src/lib/data/outcomes-store.ts` — module-level in-memory store, pre-seeded with 3 demo entries (avoided_loss, useful, neutral), `getOutcomes()`, `addOutcome()`, `generateSimOrderId()`
+- `/api/hedge/confirm` POST — creates OutcomeLedgerEntry (status: pending, actionTaken: simulated, SIM-xxx orderId), adds to store
+- `/api/outcomes` GET — returns all entries with persistence note
+- `ConfirmationGate` component — 3 required checkboxes, hedge summary strip (instrument/size/coverage), danger score context, progressive enable (count remaining), disclaimer, cancel/confirm buttons
+- `OutcomeLedgerTable` — sorted newest-first, 7 columns (date, plan ID, action badge, order ID, coverage before→after, status badge, notes), empty state
+- `/app/outcomes` — metric cards (total/avoided_loss/useful/pending), status filter chips, OutcomeLedgerTable, persistence notice badge, empty state CTA
+- `/app/hedge` updated — gate state machine (done→gate→confirming→confirmed), ConfirmationGate renders below plan cards, confirmed state shows order ID + link to outcomes
+
+**Wave 2 limitation documented:** In-memory outcomes reset on server restart. Wave 3 adds Supabase.
+
+**Build result:** 25 routes, 0 TypeScript errors, 0 build errors
 
 ---
 
@@ -484,3 +492,4 @@ These limitations are intentional for Wave 2 and will be addressed in Wave 3.
 | 2026-06-02 | Phase 8 | SoSoValue adapter — live fetch (4 patterns, 6s timeout, 2min cache), sentiment scoring, 6-card fallback, /api/intelligence/sosovalue, /api/status updated, EvidenceCardList UI |
 | 2026-06-02 | Phase 9 | Risk scan engine — convexity-score.ts (5-factor formula), /api/scan/run, DangerScoreGauge (SVG), RiskFactorCard, full interactive /app/scan (idle/scanning/results/error states) |
 | 2026-06-02 | Phase 10 | Hedge composer — hedge-composer.ts (instrument selection, sizing, coverage, confidence, preview), /api/hedge/generate + preview, HedgePlanCard, ExecutionPreviewCard, full interactive /app/hedge |
+| 2026-06-02 | Phase 11 | Confirmation gate (3-checkbox), outcomes store (pre-seeded), /api/hedge/confirm, /api/outcomes, OutcomeLedgerTable, /app/outcomes (metric cards + filter + table), /app/hedge updated with gate→confirmed flow |
