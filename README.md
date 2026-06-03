@@ -8,9 +8,11 @@ Convexity Desk is a portfolio-protection and hedge-execution desk for crypto tra
 
 ## Current Build Phase
 
-**Phase 7 — SoDEX Market Data Adapter** *(complete)*
+**Phase 9 — Convexity Risk Scan Engine** *(complete)*
 
-`src/lib/adapters/sodex.ts` — tries live fetch from SODEX_BASE_URL (4 endpoint patterns, 5 s timeout, 60 s cache), normalises unknown API shapes, falls back to typed fallback data. `/api/market/sodex` returns `AdapterResponse<SoDEXMarketData>`. `/api/status` now reflects real SoDEX mode. `SoDEXMarketPreview` client component shows markets, spread, stress bars, and live/fallback badge on `/app/scan`. 0 TS errors.
+`src/lib/risk/convexity-score.ts` — deterministic 5-factor Danger Score (instFlow×0.30 + narrative×0.20 + concentration×0.25 + microstructure×0.15 + eventProximity×0.10). Each factor has its own calculator, explanation generator, and evidence linker. `/api/scan/run` runs all adapters in parallel and returns `{ scan, evidenceCards, dataMode }`. `DangerScoreGauge` (animated SVG arc, 270° sweep), `RiskFactorCard` (score bar + explanation + contribution pts). Full interactive `/app/scan`: idle → scanning (animated steps) → results (gauge + 5 factor cards + evidence grid + hedge CTA) → error state. 0 TS errors.
+
+`src/lib/adapters/sosovalue.ts` — tries live fetch from SOSOVALUE_API_KEY + BASE_URL (4 news endpoint patterns, 6 s timeout, 2 min cache), keyword-based sentiment scoring, normalises into `EvidenceCard[]`. 6-card typed fallback. `computeNarrativePressure` and `computeInstitutionalFlowPressure` exported for Phase 9 risk engine. `/api/intelligence/sosovalue` and `/api/status` both updated. `EvidenceCardList` client component with severity colouring, sentiment/source badges, and pressure score bars on `/app/scan`. 0 TS errors.
 
 Demo portfolio data in `src/lib/data/demo-portfolio.ts`. `/api/portfolio/demo` returns live data. `/app/portfolio` shows concentration warning, 4 metric cards, Recharts donut allocation chart with custom legend, exposure buckets panel (5 buckets with progress bars), and full asset table (amount, price, value, weight bar, risk contribution, beta bucket badge, hedgeable icon). 0 TS errors.
 
@@ -29,8 +31,8 @@ Demo portfolio data in `src/lib/data/demo-portfolio.ts`. `/api/portfolio/demo` r
 | Portfolio module | ✅ Complete |
 | SoDEX adapter | ✅ Complete |
 | SoDEX adapter | ✅ Complete |
-| SoSoValue adapter | ⏳ Pending — Phase 8 |
-| Risk scan engine | ⏳ Pending — Phase 9 |
+| SoSoValue adapter | ✅ Complete |
+| Risk scan engine | ✅ Complete |
 | Hedge composer | ⏳ Pending — Phase 10 |
 | Confirmation + ledger | ⏳ Pending — Phase 11 |
 | Methodology + docs | ⏳ Pending — Phase 12 |
@@ -276,8 +278,8 @@ All live/fallback/mock status will be clearly labelled in the UI once implemente
 | 5 | Dashboard shell + navigation | ✅ Complete |
 | 6 | Portfolio module with demo data | ✅ Complete |
 | 7 | SoDEX market data adapter | ✅ Complete |
-| 8 | SoSoValue intelligence adapter | ⏳ Pending |
-| 9 | Convexity Risk Scan engine | ⏳ Pending |
+| 8 | SoSoValue intelligence adapter | ✅ Complete |
+| 9 | Convexity Risk Scan engine | ✅ Complete |
 | 10 | Hedge composer + execution preview | ⏳ Pending |
 | 11 | Confirmation gate + outcome ledger | ⏳ Pending |
 | 12 | Methodology, docs, and settings pages | ⏳ Pending |
@@ -341,13 +343,15 @@ npm run dev
 | 2026-06-02 | Phase 5 | Dashboard shell — DashboardShell, Sidebar (active nav), Topbar (API status), DemoModeBanner, MetricCard, all /app/* screens updated |
 | 2026-06-02 | Phase 6 | Portfolio module — demo data, /api/portfolio/demo, AllocationChart (Recharts), exposure buckets, asset table, concentration warning |
 | 2026-06-02 | Phase 7 | SoDEX adapter — live fetch attempt, 4 endpoint patterns, normaliser, 60s cache, typed fallback, /api/market/sodex, /api/status updated, SoDEXMarketPreview UI |
+| 2026-06-02 | Phase 8 | SoSoValue adapter — live fetch (4 patterns, 6s timeout, 2min cache), sentiment scoring, 6-card fallback, /api/intelligence/sosovalue, /api/status updated, EvidenceCardList UI |
+| 2026-06-02 | Phase 9 | Risk scan engine — convexity-score.ts (5-factor formula), /api/scan/run, DangerScoreGauge (SVG), RiskFactorCard, full interactive /app/scan (idle/scanning/results/error) |
 
 ---
 
 ## Next Recommended Build Step
 
-**Phase 8: SoSoValue Intelligence Adapter**
+**Phase 10: Hedge Composer and Execution Preview**
 
-Build `src/lib/adapters/sosovalue.ts`, implement `/api/intelligence/sosovalue`, attempt live fetch from SoSoValue OpenAPI, normalise into `EvidenceCard[]`, return typed fallback on failure, expose live/fallback/mock status. Update `/api/status` to reflect SoSoValue mode.
+Build `src/lib/hedge/hedge-composer.ts`, wire `/api/hedge/generate` and `/api/hedge/preview`, and build the full `/app/hedge` screen with instrument, direction, size, coverage, confidence, slippage preview, SoDEX orderbook preview, and risk warnings.
 
-Do not start Phase 8 until explicitly instructed.
+Do not start Phase 10 until explicitly instructed.

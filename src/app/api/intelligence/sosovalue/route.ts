@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
+import { getSoSoValueIntelligence } from "@/lib/adapters/sosovalue";
+
+export const dynamic = "force-dynamic";
 
 export async function GET() {
-  return NextResponse.json({ message: "Phase 8 will implement this route", route: "/api/intelligence/sosovalue" });
+  const response = await getSoSoValueIntelligence();
+  return NextResponse.json(response);
 }

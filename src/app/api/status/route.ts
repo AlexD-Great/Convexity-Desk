@@ -1,23 +1,32 @@
 import { NextResponse } from "next/server";
 import { getSoDEXMarketData } from "@/lib/adapters/sodex";
+import { getSoSoValueIntelligence } from "@/lib/adapters/sosovalue";
 import type { IntegrationStatus } from "@/types";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  // SoDEX: check adapter mode
-  const sodexResult = await getSoDEXMarketData();
+  const [sodexResult, sosovalueResult] = await Promise.all([
+    getSoDEXMarketData(),
+    getSoSoValueIntelligence(),
+  ]);
 
-  // SoSoValue: not yet configured (Phase 8)
+  const sodexMode: IntegrationStatus["sodex"] =
+    sodexResult.mode === "live" ? "live"
+    : sodexResult.mode === "error" ? "error"
+    : "fallback";
+
   const sosovalueMode: IntegrationStatus["sosovalue"] =
-    process.env.SOSOVALUE_API_KEY?.trim() ? "fallback" : "mock";
+    sosovalueResult.mode === "live" ? "live"
+    : sosovalueResult.mode === "error" ? "error"
+    : "fallback";
 
-  const overallMode: IntegrationStatus["mode"] =
-    sodexResult.mode === "live" ? "mixed" : "demo";
+  const hasAnyLive = sodexMode === "live" || sosovalueMode === "live";
+  const overallMode: IntegrationStatus["mode"] = hasAnyLive ? "mixed" : "demo";
 
   const status: IntegrationStatus = {
     sosovalue: sosovalueMode,
-    sodex: sodexResult.mode === "live" ? "live" : sodexResult.mode === "error" ? "error" : "fallback",
+    sodex: sodexMode,
     mode: overallMode,
     lastCheckedAt: new Date().toISOString(),
   };

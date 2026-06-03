@@ -266,35 +266,70 @@ Wave 2 must not be mock-only. At minimum one genuine live read integration must 
 
 ---
 
-### Phase 8 — SoSoValue Intelligence Adapter ⏳ Pending
+### Phase 8 — SoSoValue Intelligence Adapter ✅ Complete
 
-Tasks:
-- SoSoValue adapter (src/lib/adapters/sosovalue.ts)
-- /api/intelligence/sosovalue route
-- Attempt live news/token/institutional flow fetch
-- Typed fallback if unavailable
-- Evidence cards from live or fallback data
-- Clear live/fallback/mock labelling
+**Date:** 2026-06-02
+
+**What was done:**
+- `src/lib/adapters/sosovalue.ts`:
+  - Tries 4 news endpoint patterns with x-api-key + Bearer auth headers
+  - 6 second abort timeout, 2 minute in-memory cache
+  - `sentimentFromText()` — keyword-based scoring against 14 bearish / 11 bullish terms
+  - `normaliseLiveResponse()` — handles unknown API shapes (data/items/news/articles/results/list)
+  - 6-card typed fallback (BTC ETF outflow, ETH ETF outflow, OI compression, Fed minutes, seasonal pattern, SOL congestion)
+  - Exports `computeNarrativePressure()` and `computeInstitutionalFlowPressure()` for Phase 9 risk engine
+  - Returns `AdapterResponse<SoSoValueIntelligence>` with mode: live | fallback | error
+- `/api/intelligence/sosovalue` — force-dynamic route, calls adapter
+- `/api/status` — now runs both adapters in parallel (Promise.all), reflects both modes
+- `EvidenceCardList` — client component:
+  - Fetches `/api/intelligence/sosovalue`
+  - Shows narrative pressure + institutional flow score bars (colour-coded)
+  - Evidence cards with severity dot, title, description, source/sentiment/asset/category badges
+  - Live/fallback badge
+  - Skeleton loading states
+- `/app/scan` page updated to show SoDEXMarketPreview + EvidenceCardList alongside scan placeholder
 
 **Integration target:** SoSoValue OpenAPI (https://openapi.sosovalue.com)
-**Expected mode:** Fallback until API key is confirmed working
+**Actual mode:** Fallback (SOSOVALUE_API_KEY not configured — will go live when key is available)
+
+**Files created/modified:**
+- `src/lib/adapters/sosovalue.ts` (new)
+- `src/lib/data/fallback-evidence.ts` (new)
+- `src/app/api/intelligence/sosovalue/route.ts` (updated — real adapter)
+- `src/app/api/status/route.ts` (updated — parallel adapter check)
+- `src/components/dashboard/EvidenceCardList.tsx` (new)
+- `src/app/app/scan/page.tsx` (updated — shows both data sources)
+
+**Build result:** 25 routes, 0 TypeScript errors, 0 build errors
 
 ---
 
-### Phase 9 — Risk Scan Engine ⏳ Pending
+---
 
-Tasks:
-- Risk TypeScript types
-- src/lib/risk/convexity-score.ts
-- Deterministic Danger Score formula (0–100)
-- Factor breakdown: institutional flow, narrative, concentration, microstructure, event proximity
-- /api/scan/run route
-- /app/scan page with gauge and evidence cards
+### Phase 9 — Risk Scan Engine ✅ Complete
 
-**Danger Score Formula:**
-```
-Danger Score = 0.30 × institutional_flow + 0.20 × narrative_pressure + 0.25 × portfolio_concentration + 0.15 × microstructure_stress + 0.10 × event_proximity
-```
+**Date:** 2026-06-02
+
+**What was done:**
+- `src/lib/risk/convexity-score.ts`:
+  - `calculateDangerScore(portfolio, intelligence, marketData)` → `RiskScan`
+  - 5 factor calculators: `calcPortfolioConcentration`, `calcMicrostructureStress`, `calcEventProximity` + reuses SoSoValue `computeNarrativePressure` / `computeInstitutionalFlowPressure`
+  - Per-factor explanation generator (context-aware plain English)
+  - Summary builder (risk-level-appropriate portfolio summary)
+  - Evidence ID linker per factor
+- `/api/scan/run` — POST, force-dynamic, runs all 3 data sources in parallel, returns `{ scan, evidenceCards, dataMode }`
+- `/api/evidence` — GET, returns SoSoValue evidence cards directly
+- `DangerScoreGauge` — animated SVG arc gauge (270° sweep, framer-motion stroke animation, color-coded by risk level)
+- `RiskFactorCard` — score bar with color coding, weight label, explanation, contribution pts
+- `/app/scan` full interactive page:
+  - Idle state: "Run Scan" CTA
+  - Scanning state: animated step-by-step progress
+  - Results: gauge + data mode badges, risk summary, factor mini-scores, 5 RiskFactorCards, evidence grid, hedge CTA
+  - Error state: retry button
+
+**Build result:** 25 routes, 0 TypeScript errors, 0 build errors
+
+---
 
 ---
 
@@ -421,3 +456,5 @@ These limitations are intentional for Wave 2 and will be addressed in Wave 3.
 | 2026-06-02 | Phase 5 | Dashboard shell — DashboardShell, Sidebar (active nav/mobile), Topbar (API status), MetricCard, DemoModeBanner, all /app/* updated |
 | 2026-06-02 | Phase 6 | Portfolio module — demo data, /api/portfolio/demo, AllocationChart (Recharts donut), exposure buckets, asset table, concentration warning |
 | 2026-06-02 | Phase 7 | SoDEX adapter — live fetch (4 patterns, 5s timeout, 60s cache), normaliser, typed fallback (3 markets), /api/market/sodex, /api/status updated, SoDEXMarketPreview |
+| 2026-06-02 | Phase 8 | SoSoValue adapter — live fetch (4 patterns, 6s timeout, 2min cache), sentiment scoring, 6-card fallback, /api/intelligence/sosovalue, /api/status updated, EvidenceCardList UI |
+| 2026-06-02 | Phase 9 | Risk scan engine — convexity-score.ts (5-factor formula), /api/scan/run, DangerScoreGauge (SVG), RiskFactorCard, full interactive /app/scan (idle/scanning/results/error states) |
