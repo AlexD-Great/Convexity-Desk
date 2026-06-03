@@ -8,11 +8,9 @@ Convexity Desk is a portfolio-protection and hedge-execution desk for crypto tra
 
 ## Current Build Phase
 
-**Phase 5 — App Shell and Navigation** *(complete)*
+**Phase 6 — Portfolio Module** *(complete)*
 
-Full dashboard shell with Sidebar (logo, active nav links, mode badge, wallet placeholder), Topbar (page title, ApiStatusBadge, fallback badge, wallet button), DemoModeBanner, and MetricCard. All /app/* screens updated with proper layouts. 0 TS errors.
-
-Complete public landing page. ProblemSection (4 pain point cards), HowItWorksSection (6 numbered steps + flow label), ProductPreviewSection (large mock risk scan panel), FeatureGrid (8 features), EcosystemSection (SoSoValue/SoDEX/SSI/ValueChain), ComparisonSection (6-row table), CTASection, Footer (4 columns + 2026 copyright + disclaimer). All sections have scroll-triggered animations. 0 TS errors.
+Demo portfolio data in `src/lib/data/demo-portfolio.ts`. `/api/portfolio/demo` returns live data. `/app/portfolio` shows concentration warning, 4 metric cards, Recharts donut allocation chart with custom legend, exposure buckets panel (5 buckets with progress bars), and full asset table (amount, price, value, weight bar, risk contribution, beta bucket badge, hedgeable icon). 0 TS errors.
 
 ---
 
@@ -26,7 +24,7 @@ Complete public landing page. ProblemSection (4 pain point cards), HowItWorksSec
 | Landing page (header + hero) | ✅ Complete |
 | Landing page (story sections) | ✅ Complete |
 | Dashboard shell | ✅ Complete |
-| Portfolio module | ⏳ Pending — Phase 6 |
+| Portfolio module | ✅ Complete |
 | SoDEX adapter | ⏳ Pending — Phase 7 |
 | SoSoValue adapter | ⏳ Pending — Phase 8 |
 | Risk scan engine | ⏳ Pending — Phase 9 |
@@ -93,6 +91,10 @@ The core product flow is:
 - [x] ApiStatusBadge — client component fetching /api/status
 - [x] /app overview with metric cards, risk snapshot, action prompt, quick links
 - [x] All /app/* screens updated with structured empty states
+- [x] src/lib/data/demo-portfolio.ts — demo portfolio data (BTC/ETH/SOL/SOSO/USDC)
+- [x] /api/portfolio/demo — returns typed Portfolio from demo data
+- [x] AllocationChart — Recharts PieChart donut with custom tooltip and legend
+- [x] /app/portfolio — concentration warning, 4 metric cards, allocation chart, exposure buckets, full asset table
 
 ---
 
@@ -269,7 +271,7 @@ All live/fallback/mock status will be clearly labelled in the UI once implemente
 | 3 | Landing page — header + hero | ✅ Complete |
 | 4 | Landing page — story sections + footer | ✅ Complete |
 | 5 | Dashboard shell + navigation | ✅ Complete |
-| 6 | Portfolio module with demo data | ⏳ Pending |
+| 6 | Portfolio module with demo data | ✅ Complete |
 | 7 | SoDEX market data adapter | ⏳ Pending |
 | 8 | SoSoValue intelligence adapter | ⏳ Pending |
 | 9 | Convexity Risk Scan engine | ⏳ Pending |
@@ -334,13 +336,14 @@ npm run dev
 | 2026-06-02 | Phase 3 | Landing page header + hero — Navbar (sticky/blur/mobile), HeroSection (split layout, animations), HeroDashboardPreview (realistic product UI) |
 | 2026-06-02 | Phase 4 | Full landing page — ProblemSection, HowItWorksSection, ProductPreviewSection, FeatureGrid, EcosystemSection, ComparisonSection, CTASection, Footer (2026) |
 | 2026-06-02 | Phase 5 | Dashboard shell — DashboardShell, Sidebar (active nav), Topbar (API status), DemoModeBanner, MetricCard, all /app/* screens updated |
+| 2026-06-02 | Phase 6 | Portfolio module — demo data, /api/portfolio/demo, AllocationChart (Recharts), exposure buckets, asset table, concentration warning |
 
 ---
 
 ## Next Recommended Build Step
 
-**Phase 6: Portfolio Module**
+**Phase 7: SoDEX Market Data Adapter**
 
-Wire up the demo portfolio API route, build the portfolio table, allocation chart, exposure buckets, and concentration warning. All data served from /api/portfolio/demo. No wallet connection yet.
+Build `src/lib/adapters/sodex.ts`, implement `/api/market/sodex`, attempt live public SoDEX market/ticker data, add typed fallback if unavailable, expose live/fallback/mock status clearly, and use SoDEX data in the microstructure stress context.
 
-Do not start Phase 6 until explicitly instructed.
+Do not start Phase 7 until explicitly instructed.

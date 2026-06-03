@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
+import { getDemoPortfolio } from "@/lib/data/demo-portfolio";
 
 export async function GET() {
-  return NextResponse.json({ message: "Phase 6 will implement this route", route: "/api/portfolio/demo" });
+  return NextResponse.json(getDemoPortfolio());
 }

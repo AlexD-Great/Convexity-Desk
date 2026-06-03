@@ -202,14 +202,31 @@ Wave 2 must not be mock-only. At minimum one genuine live read integration must 
 
 ---
 
-### Phase 6 — Portfolio Module ⏳ Pending
+### Phase 6 — Portfolio Module ✅ Complete
 
-Tasks:
-- Portfolio TypeScript types
-- Demo portfolio data ($42,850 across BTC, ETH, SOL, SOSO, USDC)
-- /api/portfolio/demo route
-- Portfolio table, allocation chart, exposure buckets
-- Concentration warning
+**Date:** 2026-06-02
+
+**What was done:**
+- `src/lib/data/demo-portfolio.ts` — `getDemoPortfolio()` returns typed Portfolio with 5 assets: BTC ($18,500 · 43.2%), ETH ($9,200 · 21.5%), SOL ($5,100 · 11.9%), SOSO ($2,300 · 5.4%), USDC ($7,750 · 18.0%)
+- `/api/portfolio/demo` — returns demo portfolio as JSON
+- `AllocationChart.tsx` — Recharts PieChart donut (innerRadius 68, outerRadius 100), custom tooltip, custom legend grid
+- `/app/portfolio` page:
+  - Concentration warning banner (triggered at BTC > 40% threshold)
+  - 4 metric cards: Total Value, Largest Position, Hedgeable Exposure, High Beta Exposure
+  - Allocation chart (left) + Exposure buckets panel (right)
+  - Exposure buckets: BTC Beta 43.2%, ETH Beta 21.5%, High Beta 17.3%, Stablecoins 18.0%, SSI 0%
+  - Full asset table: amount, price, value, weight bar, risk contribution (color-coded), beta bucket badge, hedgeable icon
+  - CTA row: "Run Convexity Scan →"
+
+**Files created/modified:**
+- `src/lib/data/demo-portfolio.ts` (new)
+- `src/app/api/portfolio/demo/route.ts` (updated — real data)
+- `src/components/dashboard/AllocationChart.tsx` (new)
+- `src/app/app/portfolio/page.tsx` (updated — full portfolio UI)
+
+**Build result:** 25 routes, 0 TypeScript errors, 0 build errors
+
+---
 
 ---
 
@@ -381,3 +398,4 @@ These limitations are intentional for Wave 2 and will be addressed in Wave 3.
 | 2026-06-02 | Phase 3 | Landing page header + hero — Navbar (sticky/blur/mobile), HeroSection (split layout, animations), HeroDashboardPreview (realistic product UI) |
 | 2026-06-02 | Phase 4 | Full landing page — ProblemSection, HowItWorksSection, ProductPreviewSection, FeatureGrid, EcosystemSection, ComparisonSection, CTASection, Footer (2026) |
 | 2026-06-02 | Phase 5 | Dashboard shell — DashboardShell, Sidebar (active nav/mobile), Topbar (API status), MetricCard, DemoModeBanner, all /app/* updated |
+| 2026-06-02 | Phase 6 | Portfolio module — demo data, /api/portfolio/demo, AllocationChart (Recharts donut), exposure buckets, asset table, concentration warning |
