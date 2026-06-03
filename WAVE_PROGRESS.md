@@ -333,6 +333,31 @@ Wave 2 must not be mock-only. At minimum one genuine live read integration must 
 
 ---
 
+### Phase 10 — Hedge Composer + Execution Preview ✅ Complete
+
+**Date:** 2026-06-02
+
+**What was done:**
+- `src/lib/hedge/hedge-composer.ts`:
+  - `selectInstrument()` — picks BTC-PERP, ETH-PERP, or BTC proxy based on portfolio beta weights
+  - `dangerMultiplier()` — interpolates 0.10–0.45 for scores 50–100 (0 below 50)
+  - `hedgeSize()` — `portfolio × dangerMultiplier × riskProfileMultiplier` rounded to $1K
+  - `computeCoverage()` — hedge size / (BTC + ETH beta exposure) → coverage %
+  - `computeConfidence()` — `40 + dangerScore × 0.54 + coverage × 0.08` capped at 95
+  - `buildRationale()` — context-aware rationale string
+  - `buildRisks()` — dynamic risk bullet list based on score and size
+  - `composeHedgePlan()` — assembles full `HedgePlan`
+  - `buildPreview()` — builds `ExecutionPreview` from SoDEX market data (bid/ask/spread/slippage/cost/liquidity)
+- `/api/hedge/generate` — POST, runs full scan→compose→preview pipeline
+- `/api/hedge/preview` — POST, refreshes execution preview from new SoDEX data
+- `HedgePlanCard` — instrument + direction badge, size/coverage/confidence tiles, coverage bar, rationale, risks, stop condition
+- `ExecutionPreviewCard` — data rows table, liquidity bar, categorised warnings (spread/liquidity/simulation/disclaimer)
+- `/app/hedge` full interactive page: idle → generating (animated steps) → results (scan strip with mini gauge, plan card, preview card, confirm CTA) → error
+
+**Build result:** 25 routes, 0 TypeScript errors, 0 build errors
+
+---
+
 ### Phase 10 — Hedge Composer + Execution Preview ⏳ Pending
 
 Tasks:
@@ -458,3 +483,4 @@ These limitations are intentional for Wave 2 and will be addressed in Wave 3.
 | 2026-06-02 | Phase 7 | SoDEX adapter — live fetch (4 patterns, 5s timeout, 60s cache), normaliser, typed fallback (3 markets), /api/market/sodex, /api/status updated, SoDEXMarketPreview |
 | 2026-06-02 | Phase 8 | SoSoValue adapter — live fetch (4 patterns, 6s timeout, 2min cache), sentiment scoring, 6-card fallback, /api/intelligence/sosovalue, /api/status updated, EvidenceCardList UI |
 | 2026-06-02 | Phase 9 | Risk scan engine — convexity-score.ts (5-factor formula), /api/scan/run, DangerScoreGauge (SVG), RiskFactorCard, full interactive /app/scan (idle/scanning/results/error states) |
+| 2026-06-02 | Phase 10 | Hedge composer — hedge-composer.ts (instrument selection, sizing, coverage, confidence, preview), /api/hedge/generate + preview, HedgePlanCard, ExecutionPreviewCard, full interactive /app/hedge |

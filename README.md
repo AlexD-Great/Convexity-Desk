@@ -8,7 +8,9 @@ Convexity Desk is a portfolio-protection and hedge-execution desk for crypto tra
 
 ## Current Build Phase
 
-**Phase 9 — Convexity Risk Scan Engine** *(complete)*
+**Phase 10 — Hedge Composer and Execution Preview** *(complete)*
+
+`src/lib/hedge/hedge-composer.ts` — instrument selection, danger score multiplier, hedge sizing (rounds to $1K), coverage % (hedge/hedgeable exposure), confidence score, rationale + risk builder, execution preview from SoDEX market data. `/api/hedge/generate` runs full pipeline (scan → compose → preview) in one POST. `/api/hedge/preview` refreshes preview only. `HedgePlanCard` (instrument, direction badge, size/coverage/confidence metric tiles, rationale, risks, stop condition). `ExecutionPreviewCard` (data rows, liquidity bar, categorised warnings). Full interactive `/app/hedge`: idle → generating → results (scan strip + gauge + plan + preview + confirm CTA) → error. 0 TS errors.
 
 `src/lib/risk/convexity-score.ts` — deterministic 5-factor Danger Score (instFlow×0.30 + narrative×0.20 + concentration×0.25 + microstructure×0.15 + eventProximity×0.10). Each factor has its own calculator, explanation generator, and evidence linker. `/api/scan/run` runs all adapters in parallel and returns `{ scan, evidenceCards, dataMode }`. `DangerScoreGauge` (animated SVG arc, 270° sweep), `RiskFactorCard` (score bar + explanation + contribution pts). Full interactive `/app/scan`: idle → scanning (animated steps) → results (gauge + 5 factor cards + evidence grid + hedge CTA) → error state. 0 TS errors.
 
@@ -33,7 +35,7 @@ Demo portfolio data in `src/lib/data/demo-portfolio.ts`. `/api/portfolio/demo` r
 | SoDEX adapter | ✅ Complete |
 | SoSoValue adapter | ✅ Complete |
 | Risk scan engine | ✅ Complete |
-| Hedge composer | ⏳ Pending — Phase 10 |
+| Hedge composer | ✅ Complete |
 | Confirmation + ledger | ⏳ Pending — Phase 11 |
 | Methodology + docs | ⏳ Pending — Phase 12 |
 | Wave 2 polish + deploy | ⏳ Pending — Phase 13 |
@@ -280,7 +282,7 @@ All live/fallback/mock status will be clearly labelled in the UI once implemente
 | 7 | SoDEX market data adapter | ✅ Complete |
 | 8 | SoSoValue intelligence adapter | ✅ Complete |
 | 9 | Convexity Risk Scan engine | ✅ Complete |
-| 10 | Hedge composer + execution preview | ⏳ Pending |
+| 10 | Hedge composer + execution preview | ✅ Complete |
 | 11 | Confirmation gate + outcome ledger | ⏳ Pending |
 | 12 | Methodology, docs, and settings pages | ⏳ Pending |
 | 13 | Wave 2 polish + Vercel deployment | ⏳ Pending |
@@ -350,8 +352,8 @@ npm run dev
 
 ## Next Recommended Build Step
 
-**Phase 10: Hedge Composer and Execution Preview**
+**Phase 11: Confirmation Gate and Outcome Ledger**
 
-Build `src/lib/hedge/hedge-composer.ts`, wire `/api/hedge/generate` and `/api/hedge/preview`, and build the full `/app/hedge` screen with instrument, direction, size, coverage, confidence, slippage preview, SoDEX orderbook preview, and risk warnings.
+Build the confirmation gate with required disclaimers, `/api/hedge/confirm` (simulated execution), outcome types, `/api/outcomes`, and full `/app/outcomes` screen with ledger table and status badges.
 
-Do not start Phase 10 until explicitly instructed.
+Do not start Phase 11 until explicitly instructed.

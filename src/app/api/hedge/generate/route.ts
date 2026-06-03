@@ -1,5 +1,35 @@
 import { NextResponse } from "next/server";
+import { getDemoPortfolio } from "@/lib/data/demo-portfolio";
+import { getSoSoValueIntelligence } from "@/lib/adapters/sosovalue";
+import { getSoDEXMarketData } from "@/lib/adapters/sodex";
+import { calculateDangerScore } from "@/lib/risk/convexity-score";
+import { composeHedgePlan, buildPreview } from "@/lib/hedge/hedge-composer";
+
+export const dynamic = "force-dynamic";
 
 export async function POST() {
-  return NextResponse.json({ message: "Phase 10 will implement this route", route: "/api/hedge/generate" });
+  const [portfolio, intelligenceResult, marketResult] = await Promise.all([
+    Promise.resolve(getDemoPortfolio()),
+    getSoSoValueIntelligence(),
+    getSoDEXMarketData(),
+  ]);
+
+  const scan = calculateDangerScore(
+    portfolio,
+    intelligenceResult.data,
+    marketResult.data
+  );
+
+  const plan = composeHedgePlan(portfolio, scan, "balanced");
+  const preview = buildPreview(plan, marketResult.data, marketResult.mode);
+
+  return NextResponse.json({
+    scan,
+    hedgePlan: plan,
+    executionPreview: preview,
+    dataMode: {
+      sosovalue: intelligenceResult.mode,
+      sodex: marketResult.mode,
+    },
+  });
 }
