@@ -8,7 +8,9 @@ Convexity Desk is a portfolio-protection and hedge-execution desk for crypto tra
 
 ## Current Build Phase
 
-**Phase 6 — Portfolio Module** *(complete)*
+**Phase 7 — SoDEX Market Data Adapter** *(complete)*
+
+`src/lib/adapters/sodex.ts` — tries live fetch from SODEX_BASE_URL (4 endpoint patterns, 5 s timeout, 60 s cache), normalises unknown API shapes, falls back to typed fallback data. `/api/market/sodex` returns `AdapterResponse<SoDEXMarketData>`. `/api/status` now reflects real SoDEX mode. `SoDEXMarketPreview` client component shows markets, spread, stress bars, and live/fallback badge on `/app/scan`. 0 TS errors.
 
 Demo portfolio data in `src/lib/data/demo-portfolio.ts`. `/api/portfolio/demo` returns live data. `/app/portfolio` shows concentration warning, 4 metric cards, Recharts donut allocation chart with custom legend, exposure buckets panel (5 buckets with progress bars), and full asset table (amount, price, value, weight bar, risk contribution, beta bucket badge, hedgeable icon). 0 TS errors.
 
@@ -25,7 +27,8 @@ Demo portfolio data in `src/lib/data/demo-portfolio.ts`. `/api/portfolio/demo` r
 | Landing page (story sections) | ✅ Complete |
 | Dashboard shell | ✅ Complete |
 | Portfolio module | ✅ Complete |
-| SoDEX adapter | ⏳ Pending — Phase 7 |
+| SoDEX adapter | ✅ Complete |
+| SoDEX adapter | ✅ Complete |
 | SoSoValue adapter | ⏳ Pending — Phase 8 |
 | Risk scan engine | ⏳ Pending — Phase 9 |
 | Hedge composer | ⏳ Pending — Phase 10 |
@@ -272,7 +275,7 @@ All live/fallback/mock status will be clearly labelled in the UI once implemente
 | 4 | Landing page — story sections + footer | ✅ Complete |
 | 5 | Dashboard shell + navigation | ✅ Complete |
 | 6 | Portfolio module with demo data | ✅ Complete |
-| 7 | SoDEX market data adapter | ⏳ Pending |
+| 7 | SoDEX market data adapter | ✅ Complete |
 | 8 | SoSoValue intelligence adapter | ⏳ Pending |
 | 9 | Convexity Risk Scan engine | ⏳ Pending |
 | 10 | Hedge composer + execution preview | ⏳ Pending |
@@ -337,13 +340,14 @@ npm run dev
 | 2026-06-02 | Phase 4 | Full landing page — ProblemSection, HowItWorksSection, ProductPreviewSection, FeatureGrid, EcosystemSection, ComparisonSection, CTASection, Footer (2026) |
 | 2026-06-02 | Phase 5 | Dashboard shell — DashboardShell, Sidebar (active nav), Topbar (API status), DemoModeBanner, MetricCard, all /app/* screens updated |
 | 2026-06-02 | Phase 6 | Portfolio module — demo data, /api/portfolio/demo, AllocationChart (Recharts), exposure buckets, asset table, concentration warning |
+| 2026-06-02 | Phase 7 | SoDEX adapter — live fetch attempt, 4 endpoint patterns, normaliser, 60s cache, typed fallback, /api/market/sodex, /api/status updated, SoDEXMarketPreview UI |
 
 ---
 
 ## Next Recommended Build Step
 
-**Phase 7: SoDEX Market Data Adapter**
+**Phase 8: SoSoValue Intelligence Adapter**
 
-Build `src/lib/adapters/sodex.ts`, implement `/api/market/sodex`, attempt live public SoDEX market/ticker data, add typed fallback if unavailable, expose live/fallback/mock status clearly, and use SoDEX data in the microstructure stress context.
+Build `src/lib/adapters/sosovalue.ts`, implement `/api/intelligence/sosovalue`, attempt live fetch from SoSoValue OpenAPI, normalise into `EvidenceCard[]`, return typed fallback on failure, expose live/fallback/mock status. Update `/api/status` to reflect SoSoValue mode.
 
-Do not start Phase 7 until explicitly instructed.
+Do not start Phase 8 until explicitly instructed.

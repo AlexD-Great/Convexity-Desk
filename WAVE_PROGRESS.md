@@ -230,18 +230,39 @@ Wave 2 must not be mock-only. At minimum one genuine live read integration must 
 
 ---
 
-### Phase 7 — SoDEX Market Data Adapter ⏳ Pending
+### Phase 7 — SoDEX Market Data Adapter ✅ Complete
 
-Tasks:
-- SoDEX adapter (src/lib/adapters/sodex.ts)
-- /api/market/sodex route
-- Attempt live public market/ticker/orderbook fetch
-- Typed fallback if unavailable
-- Clear live/fallback/mock labelling
-- Microstructure stress context for Danger Score
+**Date:** 2026-06-02
+
+**What was done:**
+- `src/lib/adapters/sodex.ts` — full adapter with:
+  - Live fetch attempt if SODEX_BASE_URL is set (4 endpoint patterns tried: /api/v1/markets, /api/v1/tickers, /v1/markets, /markets)
+  - 5 second abort timeout
+  - 60 second in-memory cache
+  - Response normaliser (handles unknown API shapes — tries common field names)
+  - Computes microstructureStress per market (spreadBps × 0.6 + liquidityStress × 0.4)
+  - Typed fallback data: BTC-PERP (stress 62), ETH-PERP (stress 54), SOL-PERP (stress 71)
+  - Returns `AdapterResponse<SoDEXMarketData>` with mode: live | fallback | error
+- `/api/market/sodex` — force-dynamic route, calls adapter
+- `/api/status` — updated to check real SoDEX mode and reflect it
+- `SoDEXMarketPreview` — client component, fetches /api/market/sodex, shows markets with price, spread (with × avg), microstructure stress bar, live/fallback badge
+- `/app/scan` page — updated to show SoDEXMarketPreview alongside the Phase 9 coming-soon panel
+- `src/lib/data/fallback-market.ts` — exports FALLBACK_MARKET_CONTEXT for use by risk engine (Phase 9)
 
 **Integration target:** SoDEX public market data endpoints
-**Expected mode:** Fallback (to be updated once adapter is built and tested)
+**Actual mode:** Fallback (SODEX_BASE_URL not configured — will go live when endpoint is known)
+
+**Files created/modified:**
+- `src/lib/adapters/sodex.ts` (new)
+- `src/lib/data/fallback-market.ts` (new)
+- `src/app/api/market/sodex/route.ts` (updated — real adapter)
+- `src/app/api/status/route.ts` (updated — reflects SoDEX mode)
+- `src/components/dashboard/SoDEXMarketPreview.tsx` (new)
+- `src/app/app/scan/page.tsx` (updated — shows market preview)
+
+**Build result:** 25 routes, 0 TypeScript errors, 0 build errors
+
+---
 
 ---
 
@@ -399,3 +420,4 @@ These limitations are intentional for Wave 2 and will be addressed in Wave 3.
 | 2026-06-02 | Phase 4 | Full landing page — ProblemSection, HowItWorksSection, ProductPreviewSection, FeatureGrid, EcosystemSection, ComparisonSection, CTASection, Footer (2026) |
 | 2026-06-02 | Phase 5 | Dashboard shell — DashboardShell, Sidebar (active nav/mobile), Topbar (API status), MetricCard, DemoModeBanner, all /app/* updated |
 | 2026-06-02 | Phase 6 | Portfolio module — demo data, /api/portfolio/demo, AllocationChart (Recharts donut), exposure buckets, asset table, concentration warning |
+| 2026-06-02 | Phase 7 | SoDEX adapter — live fetch (4 patterns, 5s timeout, 60s cache), normaliser, typed fallback (3 markets), /api/market/sodex, /api/status updated, SoDEXMarketPreview |

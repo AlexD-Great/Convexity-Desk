@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
+import { getSoDEXMarketData } from "@/lib/adapters/sodex";
+
+export const dynamic = "force-dynamic";
 
 export async function GET() {
-  return NextResponse.json({ message: "Phase 7 will implement this route", route: "/api/market/sodex" });
+  const response = await getSoDEXMarketData();
+  return NextResponse.json(response);
 }
