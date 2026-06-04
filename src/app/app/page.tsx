@@ -179,12 +179,12 @@ export default function AppOverviewPage() {
         </div>
       </div>
 
-      {/* Phase notice */}
+      {/* Wave notice */}
       <CardShell variant="elevated" padding="sm">
         <p className="text-xs text-[#6b7280]">
-          <span className="text-[#9ca3af] font-medium">Phase 5 — Shell only.</span>
-          {" "}Portfolio data, live risk scans, and hedge execution will be wired in Phases 6–11.
-          All values above are demo data.
+          <span className="text-[#9ca3af] font-medium">Wave 2 demo mode.</span>
+          {" "}The dashboard now supports the full simulated workflow: portfolio, scan, evidence, hedge preview, confirmation, outcome ledger, methodology, docs, and settings.
+          Values on this overview remain static demo summary values.
         </p>
       </CardShell>
 

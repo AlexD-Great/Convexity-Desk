@@ -2,7 +2,7 @@
 
 > System architecture overview. Updated after each phase that changes the system design.
 
-**Last updated:** Phase 0 — Planning Docs (2026-06-01)
+**Last updated:** Phase 12 - Methodology, Docs, and Settings (2026-06-04)
 
 ---
 
@@ -47,7 +47,7 @@ User Browser
 - `/app/scan` — Convexity Risk Scan
 - `/app/hedge` — Hedge recommendation + execution preview
 - `/app/outcomes` — Outcome ledger
-- `/app/settings` — API mode, wallet status, preferences
+- `/app/settings` — Interactive local controls for data mode, API status, risk preferences, alert rules, wallet/testnet readiness
 
 ### Layer 2: Internal API (Next.js Route Handlers)
 
@@ -95,6 +95,7 @@ All external API calls go through internal Next.js route handlers. No API keys a
 - `demo-portfolio.ts` — Static demo portfolio data
 - `fallback-evidence.ts` — Typed fallback evidence cards
 - `fallback-market.ts` — Typed fallback market data
+- `outcomes-store.ts` — Wave 2 in-memory outcome ledger with seeded demo entries
 
 ### Layer 4: Types (`src/types/`)
 
@@ -185,6 +186,32 @@ POST /api/hedge/confirm { hedgePlanId, confirmed: true }
         ├── Create OutcomeLedgerEntry { status: "pending" }
         └── Return { success, orderId?, ledgerEntryId }
 ```
+
+---
+
+## Data Flow: Settings and Status (Phase 12)
+
+```
+User opens /app/settings
+        │
+        ├── Client fetches GET /api/status
+        │       ├── getSoSoValueIntelligence()
+        │       └── getSoDEXMarketData()
+        │
+        ├── UI labels integration modes
+        │       ├── SoSoValue: live | fallback | error
+        │       ├── SoDEX: live | fallback | error
+        │       └── Overall: demo | mixed | live
+        │
+        └── User adjusts local controls
+                ├── App mode display
+                ├── Risk profile
+                ├── Max hedge size
+                ├── Max slippage
+                └── Alert toggles
+```
+
+Phase 12 settings are intentionally client-local. Wave 3 will persist preferences and enforce execution policy server-side.
 
 ---
 
@@ -383,7 +410,8 @@ convexity-desk/
 │   │   └── data/
 │   │       ├── demo-portfolio.ts
 │   │       ├── fallback-evidence.ts
-│   │       └── fallback-market.ts
+│   │       ├── fallback-market.ts
+│   │       └── outcomes-store.ts
 │   └── types/
 │       └── index.ts
 ├── docs/

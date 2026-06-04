@@ -8,6 +8,10 @@ Convexity Desk is a portfolio-protection and hedge-execution desk for crypto tra
 
 ## Current Build Phase
 
+**Phase 12 — Methodology, Docs, and Settings Pages** *(complete)*
+
+`/methodology` now explains the five-factor Danger Score, factor sources, risk bands, hedge sizing logic, execution-preview assumptions, safety controls, and data-mode transparency. `/docs` now documents the runtime architecture, internal API routes, demo pipeline, env groups, live/fallback/demo semantics, and Wave 2 limitations. `/about` now presents the product thesis, target users, design principles, build status, and Wave 3 roadmap. `/app/settings` is now an interactive client screen with `/api/status` integration, local app mode controls, risk profile selection, max hedge/slippage sliders, alert toggles, wallet/testnet placeholders, and Wave 3 persistence notes. Stale Phase 5/Phase 12 copy cleaned up. Production build passes.
+
 **Phase 11 — Confirmation Gate and Outcome Ledger** *(complete)*
 
 `ConfirmationGate` — 3 required checkboxes, hedge summary strip, danger score context, progressive unlock, disclaimer. `OutcomeLedgerTable` — sortable by date, status badge per row, coverage before→after, order ID, notes. `/api/hedge/confirm` creates `OutcomeLedgerEntry` (status: pending, simulated, SIM-xxx order ID). `/api/outcomes` returns pre-seeded demo entries (avoided_loss, useful, neutral) plus session entries. `/app/outcomes` — metric cards, status filter tabs, full ledger table, persistence notice. `/app/hedge` updated with gate → confirmed state → outcome link. 0 TS errors.
@@ -39,7 +43,7 @@ Demo portfolio data in `src/lib/data/demo-portfolio.ts`. `/api/portfolio/demo` r
 | Risk scan engine | ✅ Complete |
 | Hedge composer | ✅ Complete |
 | Confirmation + ledger | ✅ Complete |
-| Methodology + docs | ⏳ Pending — Phase 12 |
+| Methodology + docs | ✅ Complete |
 | Wave 2 polish + deploy | ⏳ Pending — Phase 13 |
 
 ---
@@ -118,7 +122,7 @@ The core product flow is:
 - [ ] Convexity Risk Scan engine (Danger Score)
 - [ ] Hedge composer and execution preview
 - [ ] Confirmation gate and outcome ledger
-- [ ] Methodology and docs pages
+- [x] Methodology and docs pages
 - [ ] Wave 2 polish and deployment
 
 ---
@@ -255,10 +259,10 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 
 | Integration | Current Mode | Notes |
 |-------------|--------------|-------|
-| SoSoValue | ⏳ Not yet configured | Adapter pending Phase 8 |
-| SoDEX Market | ⏳ Not yet configured | Adapter pending Phase 7 |
-| Portfolio Data | ⏳ Not yet configured | Demo data pending Phase 6 |
-| Overall Mode | `demo` | Phase 1 — placeholder routes only |
+| SoSoValue | `fallback` unless API key configured | Adapter live-attempts SoSoValue news endpoints |
+| SoDEX Market | `fallback` unless base URL configured | Adapter live-attempts market/ticker endpoints |
+| Portfolio Data | `demo` | Static Wave 2 demo portfolio |
+| Overall Mode | `demo` or `mixed` | `/api/status` reports live/fallback status |
 
 All live/fallback/mock status will be clearly labelled in the UI once implemented. The app will never claim mock data is live.
 
@@ -286,7 +290,7 @@ All live/fallback/mock status will be clearly labelled in the UI once implemente
 | 9 | Convexity Risk Scan engine | ✅ Complete |
 | 10 | Hedge composer + execution preview | ✅ Complete |
 | 11 | Confirmation gate + outcome ledger | ✅ Complete |
-| 12 | Methodology, docs, and settings pages | ⏳ Pending |
+| 12 | Methodology, docs, and settings pages | ✅ Complete |
 | 13 | Wave 2 polish + Vercel deployment | ⏳ Pending |
 
 ---
@@ -354,8 +358,6 @@ npm run dev
 
 ## Next Recommended Build Step
 
-**Phase 12: Methodology, Docs, and Settings Pages**
+**Phase 13: Wave 2 Polish + Vercel Deployment**
 
-Build proper `/methodology`, `/docs`, `/about` pages (upgrading stubs), and a fully interactive `/app/settings` page with mode toggles, API status indicators, and risk preference display.
-
-Do not start Phase 12 until explicitly instructed.
+Run final responsive polish, verify all routes, clean remaining documentation drift, and prepare deployment.

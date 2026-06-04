@@ -389,14 +389,28 @@ Tasks:
 
 ---
 
-### Phase 12 — Methodology, Docs, Settings ⏳ Pending
+### Phase 12 — Methodology, Docs, Settings ✅ Complete
 
-Tasks:
-- /methodology public page
-- /docs public page
-- /about public page
-- /app/settings dashboard page
-- ARCHITECTURE.md final update
+**Date:** 2026-06-04
+
+**What was done:**
+- `/methodology` upgraded into a full methodology page covering the Danger Score formula, five weighted factors, risk bands, hedge sizing logic, execution preview assumptions, safety controls, risk preferences, and data-mode transparency.
+- `/docs` upgraded into an API and architecture reference covering runtime architecture, all 10 internal API routes, the demo pipeline, environment variable groups, live/fallback/demo states, and Wave 2 limitations.
+- `/about` upgraded with product thesis, target users, design principles, build status, disclaimer, and Wave 3 roadmap.
+- `/app/settings` rebuilt as an interactive dashboard screen with `/api/status` integration, local app-mode controls, risk profile selection, max hedge size slider, max slippage slider, alert toggles, wallet placeholder, and testnet execution placeholder.
+- `/app` overview stale Phase 5 notice replaced with current Wave 2 workflow status.
+- README and architecture documentation updated for Phase 12 completion.
+
+**Files modified:**
+- `src/app/(marketing)/methodology/page.tsx`
+- `src/app/(marketing)/docs/page.tsx`
+- `src/app/(marketing)/about/page.tsx`
+- `src/app/app/settings/page.tsx`
+- `src/app/app/page.tsx`
+- `README.md`
+- `ARCHITECTURE.md`
+
+**Build result:** Production build passes. Lint has 0 errors and 4 pre-existing warnings outside the Phase 12 changes.
 
 ---
 
@@ -416,11 +430,11 @@ Tasks:
 
 | Integration | Target | Current Status | Notes |
 |-------------|--------|----------------|-------|
-| SoSoValue News | openapi.sosovalue.com | ⏳ Not configured | Phase 8 |
-| SoSoValue Tokens | openapi.sosovalue.com | ⏳ Not configured | Phase 8 |
-| SoSoValue ETF Flow | openapi.sosovalue.com | ⏳ Not configured | Phase 8 |
-| SoDEX Market Data | SoDEX public API | ⏳ Not configured | Phase 7 |
-| SoDEX Orderbook | SoDEX public API | ⏳ Not configured | Phase 7 |
+| SoSoValue News | openapi.sosovalue.com | Fallback unless API key configured | Adapter live-attempts news endpoints |
+| SoSoValue Tokens | openapi.sosovalue.com | Planned expansion | Wave 3+ |
+| SoSoValue ETF Flow | openapi.sosovalue.com | Fallback proxy via evidence cards | Current risk factor uses evidence-derived pressure |
+| SoDEX Market Data | SoDEX public API | Fallback unless base URL configured | Adapter live-attempts market/ticker endpoints |
+| SoDEX Orderbook | SoDEX public API | Preview proxy from market data | Full orderbook path planned for Wave 3 |
 
 All integrations will use typed fallback data when live APIs are unavailable. The UI will clearly label the data source mode in all views.
 
@@ -493,3 +507,4 @@ These limitations are intentional for Wave 2 and will be addressed in Wave 3.
 | 2026-06-02 | Phase 9 | Risk scan engine — convexity-score.ts (5-factor formula), /api/scan/run, DangerScoreGauge (SVG), RiskFactorCard, full interactive /app/scan (idle/scanning/results/error states) |
 | 2026-06-02 | Phase 10 | Hedge composer — hedge-composer.ts (instrument selection, sizing, coverage, confidence, preview), /api/hedge/generate + preview, HedgePlanCard, ExecutionPreviewCard, full interactive /app/hedge |
 | 2026-06-02 | Phase 11 | Confirmation gate (3-checkbox), outcomes store (pre-seeded), /api/hedge/confirm, /api/outcomes, OutcomeLedgerTable, /app/outcomes (metric cards + filter + table), /app/hedge updated with gate→confirmed flow |
+| 2026-06-04 | Phase 12 | Methodology/docs/about upgraded, interactive settings added, stale app/docs status copy cleaned |
