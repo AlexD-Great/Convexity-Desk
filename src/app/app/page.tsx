@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import {
   DollarSign,
@@ -6,11 +8,14 @@ import {
   TrendingDown,
   ArrowRight,
   ScanLine,
+  Wallet,
 } from "lucide-react";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { CardShell } from "@/components/shared/CardShell";
 import { Badge } from "@/components/shared/Badge";
 import { PrimaryButton } from "@/components/shared/PrimaryButton";
+import { WalletConnectButton } from "@/components/wallet/WalletConnectButton";
+import { useWalletHoldings } from "@/hooks/use-wallet-holdings";
 
 const METRICS = [
   {
@@ -52,6 +57,8 @@ const RISK_FACTORS = [
 ];
 
 export default function AppOverviewPage() {
+  const wallet = useWalletHoldings();
+
   return (
     <div className="space-y-6 max-w-6xl">
 
@@ -178,6 +185,32 @@ export default function AppOverviewPage() {
           </CardShell>
         </div>
       </div>
+
+      <CardShell variant={wallet.isConnected ? "glow" : "elevated"} padding="sm">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#1f2937] bg-[#111827]">
+              <Wallet className={`h-4 w-4 ${wallet.isConnected ? "text-[#7cffb2]" : "text-[#6b7280]"}`} />
+            </div>
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="text-sm font-semibold text-white">
+                  Wallet: {wallet.isConnected ? "Connected" : "Not connected"}
+                </p>
+                <Badge variant={wallet.isConnected ? "primary" : "default"} dot>
+                  {wallet.isConnected ? "Wallet preview available" : "Demo scan"}
+                </Badge>
+              </div>
+              <p className="mt-1 text-xs leading-relaxed text-[#9ca3af]">
+                {wallet.isConnected
+                  ? `${wallet.preview.address} on ${wallet.preview.chainName}. Portfolio Mode: Demo Scan / Wallet Preview Available.`
+                  : "Connect a wallet to preview basic native and allowlisted ERC20 holdings. The risk scan remains demo-first in Wave 2."}
+              </p>
+            </div>
+          </div>
+          <WalletConnectButton />
+        </div>
+      </CardShell>
 
       {/* Wave notice */}
       <CardShell variant="elevated" padding="sm">

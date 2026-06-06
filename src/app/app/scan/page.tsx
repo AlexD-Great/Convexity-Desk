@@ -9,6 +9,7 @@ import {
   RefreshCw,
   AlertTriangle,
   ArrowUpRight,
+  Wallet,
 } from "lucide-react";
 import type { RiskScan, EvidenceCard, IntegrationDetail } from "@/types";
 import type { IntegrationMode } from "@/types";
@@ -17,6 +18,8 @@ import { RiskFactorCard } from "@/components/dashboard/RiskFactorCard";
 import { CardShell } from "@/components/shared/CardShell";
 import { Badge } from "@/components/shared/Badge";
 import { PrimaryButton } from "@/components/shared/PrimaryButton";
+import { WalletConnectButton } from "@/components/wallet/WalletConnectButton";
+import { useWalletHoldings } from "@/hooks/use-wallet-holdings";
 
 type ScanState = "idle" | "scanning" | "done" | "error";
 
@@ -316,6 +319,8 @@ function ResultsState({
 export default function ScanPage() {
   const [state, setState] = useState<ScanState>("idle");
   const [result, setResult] = useState<ScanResponse | null>(null);
+  const [scanMode, setScanMode] = useState<"demo" | "wallet_preview">("demo");
+  const wallet = useWalletHoldings();
 
   const runScan = async () => {
     setState("scanning");
@@ -343,6 +348,61 @@ export default function ScanPage() {
           Convexity Danger Score · 5 weighted risk factors · SoSoValue + SoDEX data
         </p>
       </div>
+
+      <CardShell variant="elevated" padding="sm" className="mb-6">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <Wallet className={`mt-1 h-4 w-4 shrink-0 ${wallet.isConnected ? "text-[#7cffb2]" : "text-[#6b7280]"}`} />
+            <div>
+              <p className="text-sm font-semibold text-white">Scan Input</p>
+              <p className="mt-1 text-xs leading-relaxed text-[#9ca3af]">
+                {wallet.isConnected
+                  ? "Connected wallet preview is active, but full wallet-based risk scanning is planned for Wave 3. This Wave 2 scan uses the demo portfolio for a complete end-to-end risk flow."
+                  : "Run scan on demo portfolio, or connect a wallet to preview basic holdings without changing the scan input."}
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setScanMode("demo")}
+                  className="rounded-full border px-3 py-1 font-mono text-[10px] uppercase tracking-wide"
+                  style={{
+                    borderColor: scanMode === "demo" ? "#7cffb240" : "#1f2937",
+                    color: scanMode === "demo" ? "#7cffb2" : "#9ca3af",
+                    backgroundColor: scanMode === "demo" ? "#7cffb212" : "transparent",
+                  }}
+                >
+                  Run scan on demo portfolio
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setScanMode("wallet_preview")}
+                  className="rounded-full border px-3 py-1 font-mono text-[10px] uppercase tracking-wide"
+                  style={{
+                    borderColor: scanMode === "wallet_preview" ? "#7cffb240" : "#1f2937",
+                    color: scanMode === "wallet_preview" ? "#7cffb2" : "#9ca3af",
+                    backgroundColor: scanMode === "wallet_preview" ? "#7cffb212" : "transparent",
+                  }}
+                >
+                  Preview wallet holdings
+                </button>
+              </div>
+            </div>
+          </div>
+          {wallet.isConnected ? (
+            <Badge variant="primary" dot>{wallet.preview.chainName}</Badge>
+          ) : (
+            <WalletConnectButton />
+          )}
+        </div>
+      </CardShell>
+
+      {scanMode === "wallet_preview" && (
+        <CardShell variant="warning" padding="sm" className="mb-6">
+          <p className="text-xs leading-relaxed text-[#9ca3af]">
+            Wallet preview mode is informational only in Wave 2. Native and allowlisted ERC20 balances can be shown on the Portfolio page, but this risk scan still uses the demo portfolio unless holdings can be converted safely into the full portfolio model.
+          </p>
+        </CardShell>
+      )}
 
       <AnimatePresence mode="wait">
         {state === "idle" && (

@@ -57,8 +57,12 @@ const ENV_GROUPS = [
     vars: ["SODEX_BASE_URL", "SODEX_TESTNET_BASE_URL", "SODEX_API_KEY"],
   },
   {
+    title: "Wallet Preview",
+    vars: ["NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID", "NEXT_PUBLIC_CHAIN_ID"],
+  },
+  {
     title: "Wave 3",
-    vars: ["NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID", "NEXT_PUBLIC_CHAIN_ID"],
+    vars: ["NEXT_PUBLIC_SUPABASE_URL"],
   },
 ];
 
@@ -96,6 +100,13 @@ const CURRENT_INTEGRATIONS = [
       "The adapter attempts unsigned public/testnet market reads from documented SoDEX endpoints, then falls back if the gateway is unavailable.",
   },
   {
+    label: "Wallet Preview",
+    status: "Basic holdings",
+    variant: "success" as const,
+    detail:
+      "RainbowKit and wagmi connect supported wallets and read native balance plus allowlisted ERC20 balances. Full wallet indexing is not implemented yet.",
+  },
+  {
     label: "Execution",
     status: "Simulation only",
     variant: "demo" as const,
@@ -105,10 +116,11 @@ const CURRENT_INTEGRATIONS = [
 ];
 
 const LIMITATIONS = [
-  "Portfolio ingestion is static demo data in Wave 2.",
+  "Risk scanning still uses the static demo portfolio for the complete Wave 2 flow.",
+  "Connected wallet mode reads native balance and allowlisted ERC20 balances only.",
   "Hedge confirmation records simulated orders only.",
   "Outcome ledger storage is in-memory and resets on server restart.",
-  "Wallet connection, EIP-712 signing, and SoDEX testnet order placement are Wave 3 work.",
+  "Full wallet indexing, EIP-712 signing, and SoDEX testnet order placement are Wave 3 work.",
 ];
 
 function MethodBadge({ method }: { method: string }) {
@@ -160,6 +172,7 @@ export default function DocsPage() {
                   { label: "Frontend", value: "Next.js App Router, React 19, Tailwind v4" },
                   { label: "Risk", value: "Five-factor deterministic Danger Score" },
                   { label: "Adapters", value: "SoSoValue and SoDEX live attempts with typed fallback" },
+                  { label: "Wallet", value: "RainbowKit/wagmi basic holdings preview" },
                   { label: "Execution", value: "Wave 2 simulation with human confirmation gate" },
                 ].map(({ label, value }) => (
                   <div key={label} className="flex items-center justify-between gap-4 rounded-lg border border-[#1f2937] bg-[#111827] px-3 py-2.5">

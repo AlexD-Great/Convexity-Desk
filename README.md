@@ -8,6 +8,12 @@ Convexity Desk is a portfolio-protection and hedge-execution desk for crypto tra
 
 ## Current Build Phase
 
+**Phase 12.5 — Basic Wallet Connection and Holdings Preview Sprint** *(complete)*
+
+Wallet connection is now real instead of decorative. The app uses RainbowKit + wagmi + viem with TanStack Query providers at the root. The dashboard topbar opens the wallet modal, shows connected address, and allows account/disconnect through RainbowKit. Sidebar, dashboard overview, settings, portfolio, and scan pages all reflect wallet connection state. `/app/portfolio` now has `Demo Portfolio` and `Connected Wallet` modes. Connected Wallet mode reads native token balance and allowlisted ERC20 balances only; it does not claim full portfolio import. Risk scan remains demo-first in Wave 2 unless wallet holdings can be safely converted into the full portfolio model.
+
+Supported wallet scope: Ethereum mainnet (`1`) and Sepolia (`11155111`). ValueChain is documented as a Wave 3 improvement until chain configuration is available. Supported ERC20 allowlist: USDC and WETH on Ethereum mainnet. Native balance is attempted on supported connected chains. USD values use fallback prices only where available and are labelled as estimates.
+
 **Phase 12 — Methodology, Docs, and Settings Pages** *(complete)*
 
 `/methodology` now explains the five-factor Danger Score, factor sources, risk bands, hedge sizing logic, execution-preview assumptions, safety controls, and data-mode transparency. `/docs` now documents the runtime architecture, internal API routes, demo pipeline, env groups, live/fallback/demo semantics, and Wave 2 limitations. `/about` now presents the product thesis, target users, design principles, build status, and Wave 3 roadmap. `/app/settings` is now an interactive client screen with `/api/status` integration, local app mode controls, risk profile selection, max hedge/slippage sliders, alert toggles, wallet/testnet placeholders, and Wave 3 persistence notes. Stale Phase 5/Phase 12 copy cleaned up. Production build passes.
@@ -46,6 +52,7 @@ Demo portfolio data in `src/lib/data/demo-portfolio.ts`. `/api/portfolio/demo` r
 | Hedge composer | ✅ Complete |
 | Confirmation + ledger | ✅ Complete |
 | Methodology + docs | ✅ Complete |
+| Wallet connection + holdings preview | ✅ Complete |
 | Wave 2 polish + deploy | ⏳ Pending — Phase 13 |
 
 ---
@@ -99,8 +106,8 @@ The core product flow is:
 - [x] HeroSection — full-viewport, background glows + dot grid, framer-motion stagger, split layout
 - [x] Landing page at / wired up with Navbar + HeroSection
 - [x] DashboardShell (Sidebar + Topbar + DemoModeBanner + main area)
-- [x] Sidebar — logo, active nav links (usePathname), demo mode badge, wallet placeholder
-- [x] Topbar — page title, ApiStatusBadge (fetches /api/status), fallback badge, wallet button
+- [x] Sidebar — logo, active nav links (usePathname), demo mode badge, wallet status (Phase 12.5 upgraded from placeholder)
+- [x] Topbar — page title, ApiStatusBadge (fetches /api/status), fallback badge, working wallet button
 - [x] MetricCard — reusable dashboard metric component
 - [x] DemoModeBanner — persistent demo mode notice with settings link
 - [x] ApiStatusBadge — client component fetching /api/status
@@ -140,7 +147,7 @@ The core product flow is:
 | Charts | Recharts |
 | Animation | Framer Motion |
 | Validation | Zod |
-| Wallet (Wave 3) | wagmi + viem |
+| Wallet | RainbowKit + wagmi + viem (Phase 12.5 preview) |
 | Persistence (Wave 3) | Supabase or SQLite |
 | Deployment | Vercel |
 
@@ -293,6 +300,7 @@ All live/fallback/mock status will be clearly labelled in the UI once implemente
 | 10 | Hedge composer + execution preview | ✅ Complete |
 | 11 | Confirmation gate + outcome ledger | ✅ Complete |
 | 12 | Methodology, docs, and settings pages | ✅ Complete |
+| 12.5 | Basic wallet connection and holdings preview | ✅ Complete |
 | 13 | Wave 2 polish + Vercel deployment | ⏳ Pending |
 
 ---
@@ -302,7 +310,7 @@ All live/fallback/mock status will be clearly labelled in the UI once implemente
 | Phase | Description |
 |-------|-------------|
 | W3-1 | Supabase/SQLite persistence layer |
-| W3-2 | Wallet connection (wagmi + viem) |
+| W3-2 | Full wallet portfolio indexing and persistence |
 | W3-3 | SoDEX testnet execution path |
 | W3-4 | Smart contract layer (HedgeReceiptLogger, RiskPolicyRegistry) |
 | W3-5 | Final demo script, architecture diagram, deployment polish |
@@ -333,6 +341,7 @@ npm run dev
 - Demo mode works without any API keys configured
 - SoSoValue live mode requires `SOSOVALUE_API_KEY`; API access has been requested but the key is not available yet
 - SoDEX public/testnet market reads are attempted without trade execution; order placement remains disabled until signing is safe
+- Wallet preview supports basic native balance plus allowlisted ERC20 reads only; full portfolio indexing is planned for Wave 3
 
 ---
 
@@ -356,6 +365,7 @@ npm run dev
 | 2026-06-02 | Phase 7 | SoDEX adapter — live fetch attempt, 4 endpoint patterns, normaliser, 60s cache, typed fallback, /api/market/sodex, /api/status updated, SoDEXMarketPreview UI |
 | 2026-06-02 | Phase 8 | SoSoValue adapter — live fetch path prepared, sentiment scoring, 6-card fallback, /api/intelligence/sosovalue, /api/status updated, EvidenceCardList UI |
 | 2026-06-06 | Integration honesty | SoSoValue marked fallback with reason "API key not configured"; SoDEX adapter updated to attempt documented unsigned public/testnet market reads; execution remains simulation-only |
+| 2026-06-06 | Phase 12.5 | Added RainbowKit/wagmi wallet connection, connected address display, wallet status in dashboard/settings, native balance preview, mainnet USDC/WETH allowlist reads, portfolio Demo/Connected Wallet modes, and conservative scan messaging |
 | 2026-06-02 | Phase 9 | Risk scan engine — convexity-score.ts (5-factor formula), /api/scan/run, DangerScoreGauge (SVG), RiskFactorCard, full interactive /app/scan (idle/scanning/results/error) |
 
 ---
@@ -364,4 +374,4 @@ npm run dev
 
 **Phase 13: Wave 2 Polish + Vercel Deployment**
 
-Run final responsive polish, verify all routes, clean remaining documentation drift, and prepare deployment.
+Run final responsive polish, verify all routes including wallet disconnected/connected states, clean remaining documentation drift, and prepare deployment.

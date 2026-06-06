@@ -14,6 +14,7 @@ import {
   X,
   Wallet,
 } from "lucide-react";
+import { useAccount } from "wagmi";
 import { cn } from "@/lib/utils";
 
 const PRIMARY_NAV = [
@@ -70,6 +71,9 @@ interface SidebarProps {
 }
 
 export function Sidebar({ mobileOpen, onClose }: SidebarProps) {
+  const { address, isConnected, chain } = useAccount();
+  const shortAddress = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "";
+
   const sidebarContent = (
     <div className="flex h-full flex-col">
       {/* Logo */}
@@ -123,13 +127,17 @@ export function Sidebar({ mobileOpen, onClose }: SidebarProps) {
         </div>
       </nav>
 
-      {/* Bottom: wallet placeholder */}
+      {/* Bottom: wallet status */}
       <div className="border-t border-[#1f2937] p-3">
         <div className="flex items-center gap-3 rounded-lg border border-[#1f2937] bg-[#111827] px-3 py-2.5">
-          <Wallet className="h-4 w-4 text-[#6b7280] shrink-0" />
+          <Wallet className={`h-4 w-4 shrink-0 ${isConnected ? "text-[#7cffb2]" : "text-[#6b7280]"}`} />
           <div className="min-w-0">
-            <p className="text-xs text-[#9ca3af]">No wallet connected</p>
-            <p className="font-mono text-[10px] text-[#4b5563]">Wave 3 feature</p>
+            <p className="text-xs text-[#9ca3af]">
+              {isConnected ? shortAddress : "No wallet connected"}
+            </p>
+            <p className="font-mono text-[10px] text-[#4b5563]">
+              {isConnected ? chain?.name ?? "Unknown network" : "Wallet preview ready"}
+            </p>
           </div>
         </div>
       </div>

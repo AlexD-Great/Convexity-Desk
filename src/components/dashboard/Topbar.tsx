@@ -1,8 +1,9 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { Menu, Wallet } from "lucide-react";
+import { Menu } from "lucide-react";
 import { ApiStatusBadge } from "./ApiStatusBadge";
+import { WalletConnectButton } from "@/components/wallet/WalletConnectButton";
 
 const PAGE_TITLES: Record<string, string> = {
   "/app": "Overview",
@@ -58,15 +59,7 @@ export function Topbar({ onMobileMenuToggle }: TopbarProps) {
           </span>
         </div>
 
-        {/* Connect wallet placeholder (Wave 3) */}
-        <button
-          disabled
-          title="Wallet connection available in Wave 3"
-          className="flex items-center gap-2 rounded-lg border border-[#1f2937] bg-[#111827] px-3 py-1.5 text-xs text-[#6b7280] cursor-not-allowed opacity-60"
-        >
-          <Wallet className="h-3.5 w-3.5" />
-          <span className="hidden sm:inline">Connect Wallet</span>
-        </button>
+        <WalletConnectButton compact />
       </div>
     </header>
   );

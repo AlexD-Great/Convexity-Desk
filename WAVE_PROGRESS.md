@@ -171,8 +171,8 @@ Wave 2 must not be mock-only. At minimum one genuine live read integration must 
 
 **What was done:**
 - DashboardShell: manages mobile sidebar state, renders Sidebar + Topbar + DemoModeBanner + main content
-- Sidebar: logo with Shield icon, "Demo Mode" pulse badge, primary nav (Overview/Portfolio/Risk Scan/Hedge Plan/Outcome Ledger) with active state via usePathname, secondary nav (Methodology/Settings), wallet placeholder (Wave 3), mobile overlay with close button
-- Topbar: mobile hamburger, page title derived from pathname, ApiStatusBadge (fetches /api/status), fallback badge, disabled Connect Wallet button (Wave 3)
+- Sidebar: logo with Shield icon, "Demo Mode" pulse badge, primary nav (Overview/Portfolio/Risk Scan/Hedge Plan/Outcome Ledger) with active state via usePathname, secondary nav (Methodology/Settings), wallet area later replaced by Phase 12.5 wallet status, mobile overlay with close button
+- Topbar: mobile hamburger, page title derived from pathname, ApiStatusBadge (fetches /api/status), fallback badge, wallet area later replaced by Phase 12.5 Connect Wallet button
 - MetricCard: reusable metric with label, value, sublabel, accent color, icon
 - DemoModeBanner: persistent thin banner with demo mode notice and settings link
 - ApiStatusBadge: client component, fetches /api/status, shows live/demo/mixed with color dot
@@ -398,7 +398,7 @@ Tasks:
 - `/methodology` upgraded into a full methodology page covering the Danger Score formula, five weighted factors, risk bands, hedge sizing logic, execution preview assumptions, safety controls, risk preferences, and data-mode transparency.
 - `/docs` upgraded into an API and architecture reference covering runtime architecture, all 10 internal API routes, the demo pipeline, environment variable groups, live/fallback/demo states, and Wave 2 limitations.
 - `/about` upgraded with product thesis, target users, design principles, build status, disclaimer, and Wave 3 roadmap.
-- `/app/settings` rebuilt as an interactive dashboard screen with `/api/status` integration, local app-mode controls, risk profile selection, max hedge size slider, max slippage slider, alert toggles, wallet placeholder, and testnet execution placeholder.
+- `/app/settings` rebuilt as an interactive dashboard screen with `/api/status` integration, local app-mode controls, risk profile selection, max hedge size slider, max slippage slider, alert toggles, wallet section later upgraded in Phase 12.5, and testnet execution placeholder.
 - `/app` overview stale Phase 5 notice replaced with current Wave 2 workflow status.
 - README and architecture documentation updated for Phase 12 completion.
 
@@ -412,6 +412,33 @@ Tasks:
 - `ARCHITECTURE.md`
 
 **Build result:** Production build passes. Lint has 0 errors and 4 pre-existing warnings outside the Phase 12 changes.
+
+---
+
+### Phase 12.5 — Basic Wallet Connection and Holdings Preview ✅ Complete
+
+**Date:** 2026-06-06
+
+**What was done:**
+- Installed RainbowKit, wagmi, viem, and TanStack Query.
+- Added root wallet provider setup with RainbowKit modal, wagmi config, Ethereum mainnet and Sepolia support, and safe fallback behavior when `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` is missing.
+- Replaced decorative Connect Wallet button with a working wallet modal button in the dashboard topbar.
+- Sidebar, dashboard overview, and settings now show wallet connection status, connected address, and network.
+- Added wallet holdings modules:
+  - `src/lib/wallet/chains.ts`
+  - `src/lib/wallet/supported-tokens.ts`
+  - `src/lib/wallet/wallet-holdings.ts`
+  - `src/hooks/use-wallet-holdings.ts`
+- Holdings preview attempts native token balance and allowlisted ERC20 balances only.
+- Supported ERC20 allowlist: USDC and WETH on Ethereum mainnet. Sepolia supports native balance preview only unless token addresses are added later.
+- `/app/portfolio` now has `Demo Portfolio` and `Connected Wallet` modes.
+- Connected Wallet mode shows address, network, native balance, allowlisted ERC20 balances, estimated USD value where fallback prices are available, and clear `Basic holdings only` limitation labels.
+- `/app/scan` now offers `Run scan on demo portfolio` and `Preview wallet holdings` controls, while clearly stating Wave 2 scans still use the demo portfolio for the complete end-to-end flow.
+- No live trading, private key handling, SoDEX signing, or order placement was added.
+
+**Wallet status:** Real wallet connection and disconnect through RainbowKit. Full wallet portfolio indexing remains Wave 3.
+
+**Build result:** Production build passes. Lint has 0 errors and the same 4 pre-existing warnings.
 
 ---
 
@@ -464,10 +491,10 @@ When complete, the Wave 2 demo will follow this path:
 ## Wave 2 Known Limitations
 
 - No real trade execution (simulation only for Wave 2)
-- No wallet connection (planned for Wave 3)
+- Basic wallet connection is implemented, but full wallet portfolio indexing is planned for Wave 3
 - SoSoValue uses fallback data until requested API access is granted and `SOSOVALUE_API_KEY` is configured
 - SoDEX market reads may be live if public/testnet endpoints respond; typed fallback is used if the gateway fails
-- Portfolio data is demo/static (no live wallet import yet)
+- Portfolio data is demo/static for risk scanning; connected wallet preview reads basic holdings only
 - Outcome ledger is in-memory only (no persistence until Wave 3)
 
 These limitations are intentional for Wave 2 and will be addressed in Wave 3.
@@ -479,7 +506,7 @@ These limitations are intentional for Wave 2 and will be addressed in Wave 3.
 | Feature | Priority |
 |---------|----------|
 | Supabase/SQLite persistence | High |
-| Wallet connection (wagmi + viem) | High |
+| Full wallet portfolio indexing | High |
 | SoDEX testnet execution path | High |
 | EIP-712 signing module | Medium |
 | HedgeReceiptLogger smart contract | Medium |
@@ -511,3 +538,4 @@ These limitations are intentional for Wave 2 and will be addressed in Wave 3.
 | 2026-06-02 | Phase 11 | Confirmation gate (3-checkbox), outcomes store (pre-seeded), /api/hedge/confirm, /api/outcomes, OutcomeLedgerTable, /app/outcomes (metric cards + filter + table), /app/hedge updated with gate→confirmed flow |
 | 2026-06-04 | Phase 12 | Methodology/docs/about upgraded, interactive settings added, stale app/docs status copy cleaned |
 | 2026-06-06 | Integration honesty | SoSoValue kept in fallback with API-key-not-configured reason; SoDEX adapter updated to attempt documented unsigned public/testnet market reads; execution remains simulation-only |
+| 2026-06-06 | Phase 12.5 | RainbowKit/wagmi wallet connection, native balance preview, allowlisted USDC/WETH reads, portfolio wallet preview tab, settings/dashboard wallet status, conservative demo-first scan messaging |

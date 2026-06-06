@@ -2,7 +2,7 @@
 
 > System architecture overview. Updated after each phase that changes the system design.
 
-**Last updated:** Phase 12 - Methodology, Docs, and Settings (2026-06-04)
+**Last updated:** Phase 12.5 - Basic Wallet Connection and Holdings Preview (2026-06-06)
 
 ---
 
@@ -26,6 +26,14 @@ User Browser
                         ├── Risk Scoring Engine (internal)
                         ├── Hedge Composer (internal)
                         └── Outcome Ledger (in-memory → Supabase in Wave 3)
+
+Wallet Provider (client-side)
+    │
+    ├── RainbowKit wallet modal
+    ├── wagmi + viem account/balance reads
+    └── Basic holdings preview
+            ├── Native token balance
+            └── Allowlisted ERC20 balances only
 ```
 
 ---
@@ -47,7 +55,7 @@ User Browser
 - `/app/scan` — Convexity Risk Scan
 - `/app/hedge` — Hedge recommendation + execution preview
 - `/app/outcomes` — Outcome ledger
-- `/app/settings` — Interactive local controls for data mode, API status, risk preferences, alert rules, wallet/testnet readiness
+- `/app/settings` — Interactive local controls for data mode, API status, risk preferences, alert rules, wallet status, holdings preview, and testnet readiness
 
 ### Layer 2: Internal API (Next.js Route Handlers)
 
@@ -90,6 +98,12 @@ All external API calls go through internal Next.js route handlers. No API keys a
 
 **Hedge Composer** (`src/lib/hedge/`):
 - `hedge-composer.ts` — Hedge sizing and recommendation logic
+
+**Wallet Preview** (`src/lib/wallet/`, `src/hooks/`):
+- `chains.ts` — Phase 12.5 supported EVM chains: Ethereum mainnet and Sepolia
+- `supported-tokens.ts` — ERC20 allowlist, currently USDC and WETH on Ethereum mainnet
+- `wallet-holdings.ts` — Wallet holdings preview types and value helpers
+- `use-wallet-holdings.ts` — Client hook for native balance and allowlisted ERC20 balance reads
 
 **Data** (`src/lib/data/`):
 - `demo-portfolio.ts` — Static demo portfolio data
@@ -215,6 +229,32 @@ Phase 12 settings are intentionally client-local. Wave 3 will persist preference
 
 ---
 
+## Data Flow: Wallet Preview (Phase 12.5)
+
+```
+User clicks Connect Wallet
+        │
+        ▼
+RainbowKit modal opens
+        │
+        ├── wagmi account state exposes address + chain
+        │
+        ├── useWalletHoldings()
+        │       ├── useBalance(address) for native token
+        │       └── useReadContracts(balanceOf) for allowlisted ERC20s
+        │
+        └── UI surfaces wallet state
+                ├── Topbar shortened address
+                ├── Sidebar wallet status
+                ├── Settings wallet/network/balance
+                ├── Dashboard wallet mode note
+                └── Portfolio Connected Wallet preview tab
+```
+
+Phase 12.5 does not implement full wallet indexing. It reads native balance and allowlisted ERC20 balances only. If token price data is unavailable, balances are shown without USD value. Risk scan remains demo-first unless wallet holdings can be safely converted into the full `Portfolio` type.
+
+---
+
 ## Integration Architecture
 
 ### SoSoValue Adapter
@@ -301,7 +341,7 @@ riskProfileMultiplier:
 | Trade execution | Always requires human confirmation gate |
 | Fake live data | Never — fallback is labelled as fallback |
 | Input validation | Zod validation on all API route inputs |
-| Wallet (Wave 3) | wagmi/viem, no private key storage in app |
+| Wallet | RainbowKit/wagmi/viem connection only, no private key storage in app |
 | Smart contracts (Wave 3) | No fund custody in MVP contracts |
 
 ---
@@ -315,7 +355,7 @@ Wave 3 adds:
 │       └── Supabase (scans, hedge plans, outcomes, settings)
 │
 ├── Wallet Layer
-│       └── wagmi + viem + ConnectKit/RainbowKit
+│       └── Full portfolio indexing and saved wallet portfolio snapshots
 │
 ├── Testnet Execution Layer
 │       └── SoDEX testnet order placement
@@ -407,11 +447,17 @@ convexity-desk/
 │   │   │   └── convexity-score.ts
 │   │   ├── hedge/
 │   │   │   └── hedge-composer.ts
+│   │   ├── wallet/
+│   │   │   ├── chains.ts
+│   │   │   ├── supported-tokens.ts
+│   │   │   └── wallet-holdings.ts
 │   │   └── data/
 │   │       ├── demo-portfolio.ts
 │   │       ├── fallback-evidence.ts
 │   │       ├── fallback-market.ts
 │   │       └── outcomes-store.ts
+│   ├── hooks/
+│   │   └── use-wallet-holdings.ts
 │   └── types/
 │       └── index.ts
 ├── docs/

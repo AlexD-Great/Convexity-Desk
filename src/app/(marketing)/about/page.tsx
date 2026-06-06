@@ -56,8 +56,9 @@ const BUILD_STATUS = [
   { label: "Wave 2 Core Flow", status: "Complete", variant: "success" as const },
   { label: "SoSoValue API", status: "Access requested", variant: "fallback" as const },
   { label: "SoDEX Market Reads", status: "Public/testnet attempt", variant: "live" as const },
+  { label: "Wallet Preview", status: "Basic holdings", variant: "success" as const },
   { label: "Outcome Ledger", status: "In-memory", variant: "demo" as const },
-  { label: "Wallet Execution", status: "Wave 3", variant: "default" as const },
+  { label: "Trade Execution", status: "Wave 3", variant: "default" as const },
   { label: "Persistence", status: "Wave 3", variant: "default" as const },
 ];
 
@@ -71,7 +72,7 @@ const ROADMAP = [
   {
     phase: "Wave 3",
     title: "Execution and persistence",
-    body: "Wallet connection, SoDEX testnet execution, EIP-712 signing, Supabase or SQLite persistence, and smart-contract receipts.",
+    body: "Full wallet portfolio indexing, SoDEX testnet execution, EIP-712 signing, Supabase or SQLite persistence, and smart-contract receipts.",
     active: false,
   },
   {

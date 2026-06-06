@@ -18,6 +18,8 @@ import type { AppMode, IntegrationMode, IntegrationStatus, RiskProfile } from "@
 import { CardShell } from "@/components/shared/CardShell";
 import { Badge } from "@/components/shared/Badge";
 import { PrimaryButton } from "@/components/shared/PrimaryButton";
+import { WalletConnectButton } from "@/components/wallet/WalletConnectButton";
+import { useWalletHoldings } from "@/hooks/use-wallet-holdings";
 
 const APP_MODES: Array<{ value: AppMode; label: string; detail: string }> = [
   { value: "demo", label: "Demo", detail: "Use demo portfolio and labelled fallback data." },
@@ -139,6 +141,7 @@ function ToggleRow({
 }
 
 export default function SettingsPage() {
+  const wallet = useWalletHoldings();
   const [status, setStatus] = useState<IntegrationStatus | null>(null);
   const [loadingStatus, setLoadingStatus] = useState(true);
   const [appMode, setAppMode] = useState<AppMode>("demo");
@@ -418,12 +421,14 @@ export default function SettingsPage() {
 
           <div className="grid gap-3 sm:grid-cols-2">
             <CardShell variant="elevated" padding="sm">
-              <div className="flex items-start gap-3">
+            <div className="flex items-start gap-3">
                 <Wallet className="mt-1 h-4 w-4 shrink-0 text-[#6b7280]" />
                 <div>
                   <p className="text-sm font-semibold text-white">Wallet</p>
                   <p className="mt-1 text-xs leading-relaxed text-[#6b7280]">
-                    Not connected. Wallet connection is planned for Wave 3.
+                    {wallet.isConnected
+                      ? `${wallet.preview.address} on ${wallet.preview.chainName}`
+                      : "Not connected. Connect a wallet to preview basic holdings."}
                   </p>
                 </div>
               </div>
@@ -440,6 +445,39 @@ export default function SettingsPage() {
               </div>
             </CardShell>
           </div>
+
+          <CardShell variant="glow" padding="sm">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="space-y-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge variant={wallet.isConnected ? "success" : "default"} dot>
+                    {wallet.isConnected ? "Wallet connected" : "Wallet not connected"}
+                  </Badge>
+                  <Badge variant="demo">Basic holdings only</Badge>
+                </div>
+                <div className="space-y-1 text-xs text-[#9ca3af]">
+                  <p>Address: {wallet.preview.address ?? "Not connected"}</p>
+                  <p>Network: {wallet.preview.chainName}</p>
+                  <p>
+                    Native balance:{" "}
+                    {wallet.preview.native
+                      ? `${wallet.preview.native.balanceFormatted} ${wallet.preview.native.symbol}`
+                      : wallet.isConnected
+                      ? "Loading or unavailable"
+                      : "Connect wallet"}
+                  </p>
+                  <p>
+                    Portfolio import mode:{" "}
+                    {wallet.isConnected ? "Connected Wallet Preview" : "Demo Portfolio"}
+                  </p>
+                </div>
+                <p className="text-xs leading-relaxed text-[#6b7280]">
+                  Wave 2 reads basic wallet holdings only. Full wallet portfolio indexing is planned for Wave 3.
+                </p>
+              </div>
+              <WalletConnectButton />
+            </div>
+          </CardShell>
 
           <div className="rounded-lg border border-[#f59e0b]/20 bg-[#f59e0b]/[0.04] p-3">
             <div className="flex items-start gap-2">
