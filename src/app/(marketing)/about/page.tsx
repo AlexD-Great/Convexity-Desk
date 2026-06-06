@@ -54,8 +54,8 @@ const PRINCIPLES = [
 
 const BUILD_STATUS = [
   { label: "Wave 2 Core Flow", status: "Complete", variant: "success" as const },
-  { label: "SoSoValue Adapter", status: "Live attempt + fallback", variant: "fallback" as const },
-  { label: "SoDEX Adapter", status: "Live attempt + fallback", variant: "fallback" as const },
+  { label: "SoSoValue API", status: "Access requested", variant: "fallback" as const },
+  { label: "SoDEX Market Reads", status: "Public/testnet attempt", variant: "live" as const },
   { label: "Outcome Ledger", status: "In-memory", variant: "demo" as const },
   { label: "Wallet Execution", status: "Wave 3", variant: "default" as const },
   { label: "Persistence", status: "Wave 3", variant: "default" as const },

@@ -155,7 +155,12 @@ export function SoDEXMarketPreview() {
       {/* Fallback notice */}
       {data.mode === "fallback" && (
         <p className="text-[10px] text-[#6b7280] font-mono">
-          Fallback data — set SODEX_BASE_URL in .env.local for live market data.
+          {data.reason ?? "Fallback data - SoDEX public/testnet market read failed."}
+        </p>
+      )}
+      {data.mode === "live" && data.endpoint && (
+        <p className="break-all font-mono text-[10px] text-[#6b7280]">
+          Live unsigned public read: {data.endpoint}
         </p>
       )}
     </div>

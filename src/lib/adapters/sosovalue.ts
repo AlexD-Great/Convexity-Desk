@@ -146,6 +146,8 @@ export async function getSoSoValueIntelligence(): Promise<
       data: buildFallbackIntelligence(),
       mode: "fallback",
       fetchedAt: new Date().toISOString(),
+      reason: "API key not configured. Set SOSOVALUE_API_KEY to enable live SoSoValue reads.",
+      endpoint: baseUrl,
     };
     _cache = { result, expiresAt: Date.now() + 120_000 };
     return result;
@@ -208,6 +210,8 @@ export async function getSoSoValueIntelligence(): Promise<
       data: intelligence,
       mode: "live",
       fetchedAt: new Date().toISOString(),
+      reason: "Live SoSoValue API read succeeded.",
+      endpoint: baseUrl,
     };
     _cache = { result, expiresAt: Date.now() + 120_000 };
     return result;
@@ -222,6 +226,8 @@ export async function getSoSoValueIntelligence(): Promise<
       data: buildFallbackIntelligence(),
       mode: "fallback",
       fetchedAt: new Date().toISOString(),
+      reason: `SoSoValue API read failed; using typed fallback data. ${message}`,
+      endpoint: baseUrl,
     };
     _cache = { result, expiresAt: Date.now() + 60_000 };
     return result;

@@ -27,7 +27,10 @@ export function ApiStatusBadge() {
       : "#9ca3af";
 
   return (
-    <div className="flex items-center gap-1.5">
+    <div
+      className="flex items-center gap-1.5"
+      title={`${status.details.sosovalue.label} ${status.details.sodex.label}`}
+    >
       <span
         className="inline-block h-1.5 w-1.5 rounded-full"
         style={{ backgroundColor: modeColor }}

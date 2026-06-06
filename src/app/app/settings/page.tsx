@@ -277,19 +277,47 @@ export default function SettingsPage() {
             <StatusRow
               label="SoSoValue"
               mode={status?.sosovalue}
-              detail="News, evidence cards, narrative pressure, institutional flow."
+              detail={
+                status?.details.sosovalue.label ??
+                "SoSoValue: Fallback — API key not configured."
+              }
             />
             <StatusRow
               label="SoDEX"
               mode={status?.sodex}
-              detail="Market data, spread, liquidity, execution preview."
+              detail={
+                status?.details.sodex.label ??
+                "Market data, spread, liquidity, execution preview."
+              }
             />
             <StatusRow
               label="Overall Mode"
               mode={status?.mode}
-              detail={status?.lastCheckedAt ? `Last checked ${new Date(status.lastCheckedAt).toLocaleString()}` : "Waiting for status check."}
+              detail={
+                status?.lastCheckedAt
+                  ? `Last checked ${new Date(status.lastCheckedAt).toLocaleString()}`
+                  : "Waiting for status check."
+              }
             />
           </div>
+          {status && (
+            <div className="space-y-2 rounded-lg border border-[#1f2937] bg-[#0b1020] p-3">
+              <p className="font-mono text-[10px] uppercase tracking-widest text-[#6b7280]">
+                Integration notes
+              </p>
+              <p className="text-xs leading-relaxed text-[#f59e0b]">
+                {status.details.sosovalue.reason}
+              </p>
+              <p className="text-xs leading-relaxed text-[#9ca3af]">
+                {status.details.sodex.reason}
+              </p>
+              {status.details.sodex.endpoint && (
+                <p className="break-all font-mono text-[10px] text-[#6b7280]">
+                  SoDEX endpoint: {status.details.sodex.endpoint}
+                </p>
+              )}
+            </div>
+          )}
         </CardShell>
       </div>
 

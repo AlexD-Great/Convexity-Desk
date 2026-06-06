@@ -182,7 +182,7 @@ export function EvidenceCardList() {
       {/* Fallback notice */}
       {data.mode === "fallback" && (
         <p className="font-mono text-[10px] text-[#6b7280]">
-          Fallback data — set SOSOVALUE_API_KEY in .env.local for live intelligence.
+          SoSoValue: Fallback — API key not configured. API access has been requested.
         </p>
       )}
     </div>

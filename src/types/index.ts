@@ -118,11 +118,23 @@ export type OutcomeLedgerEntry = {
 export type IntegrationMode = "live" | "fallback" | "mock" | "error";
 export type AppMode = "demo" | "mixed" | "live";
 
+export type IntegrationDetail = {
+  mode: IntegrationMode;
+  label: string;
+  reason: string;
+  configured: boolean;
+  endpoint?: string;
+};
+
 export type IntegrationStatus = {
   sosovalue: IntegrationMode;
   sodex: IntegrationMode;
   mode: AppMode;
   lastCheckedAt: string;
+  details: {
+    sosovalue: IntegrationDetail;
+    sodex: IntegrationDetail;
+  };
 };
 
 export type RiskProfile = "conservative" | "balanced" | "aggressive";
@@ -131,4 +143,6 @@ export type AdapterResponse<T> = {
   data: T;
   mode: IntegrationMode;
   fetchedAt: string;
+  reason?: string;
+  endpoint?: string;
 };

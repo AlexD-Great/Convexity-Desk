@@ -31,5 +31,29 @@ export async function POST() {
       sosovalue: intelligenceResult.mode,
       sodex: marketResult.mode,
     },
+    dataStatus: {
+      sosovalue: {
+        mode: intelligenceResult.mode,
+        label:
+          intelligenceResult.mode === "live"
+            ? "SoSoValue: Live"
+            : process.env.SOSOVALUE_API_KEY?.trim()
+            ? "SoSoValue: Fallback — live read failed."
+            : "SoSoValue: Fallback — API key not configured.",
+        reason:
+          intelligenceResult.reason ??
+          "API key not configured. Set SOSOVALUE_API_KEY to enable live SoSoValue reads.",
+        endpoint: intelligenceResult.endpoint,
+      },
+      sodex: {
+        mode: marketResult.mode,
+        label:
+          marketResult.mode === "live"
+            ? "SoDEX: Live public market read"
+            : "SoDEX: Fallback public market data",
+        reason: marketResult.reason,
+        endpoint: marketResult.endpoint,
+      },
+    },
   });
 }

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { ShieldCheck, ArrowRight, RefreshCw, Loader2, CheckCircle2 } from "lucide-react";
-import type { HedgePlan, RiskScan } from "@/types";
+import type { HedgePlan, IntegrationDetail, RiskScan } from "@/types";
 import type { ExecutionPreview } from "@/lib/hedge/hedge-composer";
 import { HedgePlanCard } from "@/components/dashboard/HedgePlanCard";
 import { ExecutionPreviewCard } from "@/components/dashboard/ExecutionPreviewCard";
@@ -22,6 +22,10 @@ type GenerateResponse = {
   hedgePlan: HedgePlan;
   executionPreview: ExecutionPreview;
   dataMode: { sosovalue: string; sodex: string };
+  dataStatus?: {
+    sosovalue: IntegrationDetail;
+    sodex: IntegrationDetail;
+  };
 };
 
 // ─── Idle ─────────────────────────────────────────────────────────────
@@ -193,6 +197,16 @@ function ResultsState({
             </Badge>
           </div>
         </div>
+        {result.dataStatus && (
+          <div className="mt-3 grid gap-2 border-t border-[#1f2937] pt-3 sm:grid-cols-2">
+            <p className="text-xs leading-relaxed text-[#f59e0b]">
+              {result.dataStatus.sosovalue.label}
+            </p>
+            <p className="text-xs leading-relaxed text-[#9ca3af]">
+              {result.dataStatus.sodex.label}
+            </p>
+          </div>
+        )}
       </CardShell>
 
       {/* Hedge plan + execution preview */}

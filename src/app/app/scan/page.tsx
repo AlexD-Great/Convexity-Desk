@@ -10,7 +10,7 @@ import {
   AlertTriangle,
   ArrowUpRight,
 } from "lucide-react";
-import type { RiskScan, EvidenceCard } from "@/types";
+import type { RiskScan, EvidenceCard, IntegrationDetail } from "@/types";
 import type { IntegrationMode } from "@/types";
 import { DangerScoreGauge } from "@/components/dashboard/DangerScoreGauge";
 import { RiskFactorCard } from "@/components/dashboard/RiskFactorCard";
@@ -24,6 +24,10 @@ type ScanResponse = {
   scan: RiskScan;
   evidenceCards: EvidenceCard[];
   dataMode: { sosovalue: IntegrationMode; sodex: IntegrationMode };
+  dataStatus?: {
+    sosovalue: IntegrationDetail;
+    sodex: IntegrationDetail;
+  };
 };
 
 // ─── Idle ────────────────────────────────────────────────────────────
@@ -193,6 +197,16 @@ function ResultsState({
               SoDEX {dataMode.sodex}
             </Badge>
           </div>
+          {result.dataStatus && (
+            <div className="space-y-1 text-center">
+              <p className="text-[11px] leading-relaxed text-[#f59e0b]">
+                {result.dataStatus.sosovalue.label}
+              </p>
+              <p className="text-[11px] leading-relaxed text-[#9ca3af]">
+                {result.dataStatus.sodex.label}
+              </p>
+            </div>
+          )}
         </CardShell>
 
         {/* Summary */}

@@ -80,6 +80,30 @@ const DATA_MODES = [
   },
 ];
 
+const CURRENT_INTEGRATIONS = [
+  {
+    label: "SoSoValue",
+    status: "Fallback",
+    variant: "fallback" as const,
+    detail:
+      "API access has been requested. Until SOSOVALUE_API_KEY is added, the app uses typed fallback evidence and clearly labels it.",
+  },
+  {
+    label: "SoDEX",
+    status: "Live attempt",
+    variant: "live" as const,
+    detail:
+      "The adapter attempts unsigned public/testnet market reads from documented SoDEX endpoints, then falls back if the gateway is unavailable.",
+  },
+  {
+    label: "Execution",
+    status: "Simulation only",
+    variant: "demo" as const,
+    detail:
+      "No live trade execution is implemented. Testnet order placement waits for safe signing and confirmation plumbing.",
+  },
+];
+
 const LIMITATIONS = [
   "Portfolio ingestion is static demo data in Wave 2.",
   "Hedge confirmation records simulated orders only.",
@@ -254,6 +278,17 @@ export default function DocsPage() {
                 align="left"
               />
               <div className="mt-8 space-y-3">
+                {CURRENT_INTEGRATIONS.map(({ label, status, variant, detail }) => (
+                  <CardShell key={label} variant="elevated" padding="sm">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <p className="text-sm font-semibold text-white">{label}</p>
+                        <p className="mt-1 text-xs leading-relaxed text-[#9ca3af]">{detail}</p>
+                      </div>
+                      <Badge variant={variant} dot>{status}</Badge>
+                    </div>
+                  </CardShell>
+                ))}
                 {DATA_MODES.map(({ label, variant, detail }) => (
                   <CardShell key={label} variant="default" padding="sm">
                     <div className="flex items-start gap-3">

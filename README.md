@@ -20,7 +20,9 @@ Convexity Desk is a portfolio-protection and hedge-execution desk for crypto tra
 
 `src/lib/risk/convexity-score.ts` — deterministic 5-factor Danger Score (instFlow×0.30 + narrative×0.20 + concentration×0.25 + microstructure×0.15 + eventProximity×0.10). Each factor has its own calculator, explanation generator, and evidence linker. `/api/scan/run` runs all adapters in parallel and returns `{ scan, evidenceCards, dataMode }`. `DangerScoreGauge` (animated SVG arc, 270° sweep), `RiskFactorCard` (score bar + explanation + contribution pts). Full interactive `/app/scan`: idle → scanning (animated steps) → results (gauge + 5 factor cards + evidence grid + hedge CTA) → error state. 0 TS errors.
 
-`src/lib/adapters/sosovalue.ts` — tries live fetch from SOSOVALUE_API_KEY + BASE_URL (4 news endpoint patterns, 6 s timeout, 2 min cache), keyword-based sentiment scoring, normalises into `EvidenceCard[]`. 6-card typed fallback. `computeNarrativePressure` and `computeInstitutionalFlowPressure` exported for Phase 9 risk engine. `/api/intelligence/sosovalue` and `/api/status` both updated. `EvidenceCardList` client component with severity colouring, sentiment/source badges, and pressure score bars on `/app/scan`. 0 TS errors.
+`src/lib/adapters/sosovalue.ts` — server-side adapter remains ready for `SOSOVALUE_API_KEY`, but SoSoValue is currently **fallback** because no API key has been issued yet. API access has been requested. Until the key is added, `/api/status` reports "SoSoValue: Fallback — API key not configured" and the app uses typed fallback evidence cards. `EvidenceCardList` labels the source clearly. 0 TS errors.
+
+`src/lib/adapters/sodex.ts` — attempts unsigned public/testnet reads from documented SoDEX endpoints (`testnet-gw.sodex.dev/api/v1` and configured env roots) for perps/spot tickers and book tickers, normalises market data, and falls back to typed BTC/ETH/SOL market data if the public gateway fails. `/api/market/sodex`, hedge previews, and microstructure stress use this adapter. Execution remains preview/simulation only; no live trade placement is implemented.
 
 Demo portfolio data in `src/lib/data/demo-portfolio.ts`. `/api/portfolio/demo` returns live data. `/app/portfolio` shows concentration warning, 4 metric cards, Recharts donut allocation chart with custom legend, exposure buckets panel (5 buckets with progress bars), and full asset table (amount, price, value, weight bar, risk contribution, beta bucket badge, hedgeable icon). 0 TS errors.
 
@@ -117,8 +119,8 @@ The core product flow is:
 - [ ] Landing page (public marketing)
 - [ ] Dashboard shell (/app layout)
 - [ ] Portfolio module with demo data
-- [ ] SoDEX market data adapter
-- [ ] SoSoValue intelligence adapter
+- [x] SoDEX market data adapter
+- [x] SoSoValue intelligence adapter
 - [ ] Convexity Risk Scan engine (Danger Score)
 - [ ] Hedge composer and execution preview
 - [ ] Confirmation gate and outcome ledger
@@ -259,8 +261,8 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 
 | Integration | Current Mode | Notes |
 |-------------|--------------|-------|
-| SoSoValue | `fallback` unless API key configured | Adapter live-attempts SoSoValue news endpoints |
-| SoDEX Market | `fallback` unless base URL configured | Adapter live-attempts market/ticker endpoints |
+| SoSoValue | `fallback` | API access requested; waiting for `SOSOVALUE_API_KEY` |
+| SoDEX Market | `live` or `fallback` | Adapter attempts unsigned public/testnet market reads, then typed fallback |
 | Portfolio Data | `demo` | Static Wave 2 demo portfolio |
 | Overall Mode | `demo` or `mixed` | `/api/status` reports live/fallback status |
 
@@ -329,7 +331,8 @@ npm run dev
 - Target: Vercel
 - Environment variables must be configured in Vercel dashboard
 - Demo mode works without any API keys configured
-- Live SoSoValue/SoDEX mode requires valid API keys
+- SoSoValue live mode requires `SOSOVALUE_API_KEY`; API access has been requested but the key is not available yet
+- SoDEX public/testnet market reads are attempted without trade execution; order placement remains disabled until signing is safe
 
 ---
 
@@ -351,7 +354,8 @@ npm run dev
 | 2026-06-02 | Phase 5 | Dashboard shell — DashboardShell, Sidebar (active nav), Topbar (API status), DemoModeBanner, MetricCard, all /app/* screens updated |
 | 2026-06-02 | Phase 6 | Portfolio module — demo data, /api/portfolio/demo, AllocationChart (Recharts), exposure buckets, asset table, concentration warning |
 | 2026-06-02 | Phase 7 | SoDEX adapter — live fetch attempt, 4 endpoint patterns, normaliser, 60s cache, typed fallback, /api/market/sodex, /api/status updated, SoDEXMarketPreview UI |
-| 2026-06-02 | Phase 8 | SoSoValue adapter — live fetch (4 patterns, 6s timeout, 2min cache), sentiment scoring, 6-card fallback, /api/intelligence/sosovalue, /api/status updated, EvidenceCardList UI |
+| 2026-06-02 | Phase 8 | SoSoValue adapter — live fetch path prepared, sentiment scoring, 6-card fallback, /api/intelligence/sosovalue, /api/status updated, EvidenceCardList UI |
+| 2026-06-06 | Integration honesty | SoSoValue marked fallback with reason "API key not configured"; SoDEX adapter updated to attempt documented unsigned public/testnet market reads; execution remains simulation-only |
 | 2026-06-02 | Phase 9 | Risk scan engine — convexity-score.ts (5-factor formula), /api/scan/run, DangerScoreGauge (SVG), RiskFactorCard, full interactive /app/scan (idle/scanning/results/error) |
 
 ---

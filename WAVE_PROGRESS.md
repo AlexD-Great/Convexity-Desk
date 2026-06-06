@@ -236,8 +236,9 @@ Wave 2 must not be mock-only. At minimum one genuine live read integration must 
 
 **What was done:**
 - `src/lib/adapters/sodex.ts` — full adapter with:
-  - Live fetch attempt if SODEX_BASE_URL is set (4 endpoint patterns tried: /api/v1/markets, /api/v1/tickers, /v1/markets, /markets)
-  - 5 second abort timeout
+  - Unsigned public/testnet live read attempts against documented SoDEX REST v1 market endpoints
+  - Tries perps/spot tickers and book tickers under configured roots plus `https://testnet-gw.sodex.dev/api/v1`
+  - 7 second abort timeout
   - 60 second in-memory cache
   - Response normaliser (handles unknown API shapes — tries common field names)
   - Computes microstructureStress per market (spreadBps × 0.6 + liquidityStress × 0.4)
@@ -250,7 +251,7 @@ Wave 2 must not be mock-only. At minimum one genuine live read integration must 
 - `src/lib/data/fallback-market.ts` — exports FALLBACK_MARKET_CONTEXT for use by risk engine (Phase 9)
 
 **Integration target:** SoDEX public market data endpoints
-**Actual mode:** Fallback (SODEX_BASE_URL not configured — will go live when endpoint is known)
+**Actual mode:** Live if SoDEX public/testnet reads succeed, otherwise typed fallback. Execution remains preview/simulation only.
 
 **Files created/modified:**
 - `src/lib/adapters/sodex.ts` (new)
@@ -290,7 +291,7 @@ Wave 2 must not be mock-only. At minimum one genuine live read integration must 
 - `/app/scan` page updated to show SoDEXMarketPreview + EvidenceCardList alongside scan placeholder
 
 **Integration target:** SoSoValue OpenAPI (https://openapi.sosovalue.com)
-**Actual mode:** Fallback (SOSOVALUE_API_KEY not configured — will go live when key is available)
+**Actual mode:** Fallback. API access has been requested, but `SOSOVALUE_API_KEY` is not available yet. `/api/status` explicitly reports "SoSoValue: Fallback — API key not configured."
 
 **Files created/modified:**
 - `src/lib/adapters/sosovalue.ts` (new)
@@ -430,11 +431,11 @@ Tasks:
 
 | Integration | Target | Current Status | Notes |
 |-------------|--------|----------------|-------|
-| SoSoValue News | openapi.sosovalue.com | Fallback unless API key configured | Adapter live-attempts news endpoints |
+| SoSoValue News | openapi.sosovalue.com | Fallback | API access requested; waiting for `SOSOVALUE_API_KEY` |
 | SoSoValue Tokens | openapi.sosovalue.com | Planned expansion | Wave 3+ |
 | SoSoValue ETF Flow | openapi.sosovalue.com | Fallback proxy via evidence cards | Current risk factor uses evidence-derived pressure |
-| SoDEX Market Data | SoDEX public API | Fallback unless base URL configured | Adapter live-attempts market/ticker endpoints |
-| SoDEX Orderbook | SoDEX public API | Preview proxy from market data | Full orderbook path planned for Wave 3 |
+| SoDEX Market Data | SoDEX public/testnet REST API | Live or fallback | Adapter attempts unsigned testnet/public tickers and book tickers |
+| SoDEX Orderbook | SoDEX public/testnet REST API | Preview proxy from book tickers | Full order placement/signing planned for Wave 3 |
 
 All integrations will use typed fallback data when live APIs are unavailable. The UI will clearly label the data source mode in all views.
 
@@ -464,7 +465,8 @@ When complete, the Wave 2 demo will follow this path:
 
 - No real trade execution (simulation only for Wave 2)
 - No wallet connection (planned for Wave 3)
-- SoSoValue and SoDEX integrations may use fallback data if API keys are unavailable
+- SoSoValue uses fallback data until requested API access is granted and `SOSOVALUE_API_KEY` is configured
+- SoDEX market reads may be live if public/testnet endpoints respond; typed fallback is used if the gateway fails
 - Portfolio data is demo/static (no live wallet import yet)
 - Outcome ledger is in-memory only (no persistence until Wave 3)
 
@@ -508,3 +510,4 @@ These limitations are intentional for Wave 2 and will be addressed in Wave 3.
 | 2026-06-02 | Phase 10 | Hedge composer — hedge-composer.ts (instrument selection, sizing, coverage, confidence, preview), /api/hedge/generate + preview, HedgePlanCard, ExecutionPreviewCard, full interactive /app/hedge |
 | 2026-06-02 | Phase 11 | Confirmation gate (3-checkbox), outcomes store (pre-seeded), /api/hedge/confirm, /api/outcomes, OutcomeLedgerTable, /app/outcomes (metric cards + filter + table), /app/hedge updated with gate→confirmed flow |
 | 2026-06-04 | Phase 12 | Methodology/docs/about upgraded, interactive settings added, stale app/docs status copy cleaned |
+| 2026-06-06 | Integration honesty | SoSoValue kept in fallback with API-key-not-configured reason; SoDEX adapter updated to attempt documented unsigned public/testnet market reads; execution remains simulation-only |
