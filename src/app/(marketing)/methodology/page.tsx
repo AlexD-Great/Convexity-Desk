@@ -23,18 +23,18 @@ const FORMULA_FACTORS = [
     key: "Institutional Flow Pressure",
     weight: "30%",
     scoreKey: "institutional_flow",
-    source: "SoSoValue ETF/news intelligence",
+    source: "SoSoValue US spot ETF flows",
     detail:
-      "Measures bearish ETF flow signals and institutional repositioning pressure. In fallback mode, typed SoSoValue-style evidence cards provide the same factor shape.",
+      "Combined BTC + ETH spot ETF net flow over the last 5 trading days as a % of AUM, plus a bonus for consecutive outflow days. Mapped through a soft curve: flat flows score 50, a −1.7% week about 89.",
     accent: "#60a5fa",
   },
   {
     key: "Narrative / News Pressure",
     weight: "20%",
     scoreKey: "narrative_pressure",
-    source: "SoSoValue news sentiment",
+    source: "SoSoValue news + hot news",
     detail:
-      "Scores the balance of bearish, bullish, and neutral evidence. The current engine uses deterministic keyword pressure instead of opaque AI trading calls.",
+      "Share of bearish headlines, weighted up for high-severity (hot) items. Sentiment is deterministic keyword matching — SoSoValue does not supply a sentiment score.",
     accent: "#a78bfa",
   },
   {
@@ -43,25 +43,25 @@ const FORMULA_FACTORS = [
     scoreKey: "portfolio_concentration",
     source: "Internal portfolio analysis",
     detail:
-      "Penalizes oversized BTC beta, ETH beta, and high-beta alt exposure while recognizing stablecoin ballast.",
+      "Driven by the largest risky position of any asset (above 25% of the portfolio), plus high-beta alt exposure and how little stablecoin cushion remains.",
     accent: "#f59e0b",
   },
   {
     key: "Market Microstructure Stress",
     weight: "15%",
     scoreKey: "market_microstructure",
-    source: "SoDEX market data",
+    source: "SoDEX mainnet order books",
     detail:
-      "Uses spread, liquidity score, and orderbook stress to detect when the hedge may become more expensive to enter.",
+      "40% 24h price range, 35% USD depth resting within ±25 bps of mid, 25% bid-ask spread — volume-weighted across BTC, ETH and SOL perps.",
     accent: "#ef4444",
   },
   {
     key: "Event Proximity",
     weight: "10%",
     scoreKey: "event_proximity",
-    source: "Macro/event evidence",
+    source: "SoSoValue US macro calendar",
     detail:
-      "Raises risk when high-impact macro or market events are detected near the current portfolio state.",
+      "Upcoming releases weighted by impact (CPI, PCE, payrolls, GDP, FOMC high; PMIs, claims medium) and decayed by days away; paired releases like MoM/YoY count once.",
     accent: "#7cffb2",
   },
 ];
@@ -81,8 +81,8 @@ const HEDGE_RULES = [
   },
   {
     label: "Position sizing",
-    value: "Score x profile",
-    detail: "Danger Scores below 50 produce no hedge. Scores from 50 to 100 interpolate from 10% to 45% of portfolio value, adjusted by risk profile.",
+    value: "Score x profile, capped",
+    detail: "Danger Scores below 50 produce no hedge. Scores from 50 to 100 interpolate from 10% to 45% of non-stablecoin holdings, adjusted by risk profile and capped by your max-hedge setting.",
   },
   {
     label: "Coverage",
@@ -91,8 +91,8 @@ const HEDGE_RULES = [
   },
   {
     label: "Preview cost",
-    value: "Spread-based slippage",
-    detail: "The execution preview estimates entry price, slippage bps, slippage cost, liquidity, and warnings from SoDEX market data.",
+    value: "Order-book walk",
+    detail: "The hedge size is filled against live SoDEX bid levels to estimate average entry price and slippage, with warnings for thin books, funding and your slippage limit.",
   },
 ];
 
@@ -100,7 +100,7 @@ const SAFETY_CONTROLS = [
   {
     icon: LockKeyhole,
     title: "No automatic execution",
-    body: "Wave 2 never places a real order. Confirmation creates a simulated ledger entry only.",
+    body: "No order is ever placed automatically. Confirming a plan records a paper hedge in the outcome ledger.",
   },
   {
     icon: FileSearch,
@@ -110,12 +110,12 @@ const SAFETY_CONTROLS = [
   {
     icon: DatabaseZap,
     title: "Transparent data mode",
-    body: "Live, fallback, and demo states are exposed in API responses and labelled in the dashboard.",
+    body: "Every source reports live, stale or fallback in API responses, and the dashboard banners any source that is down.",
   },
   {
     icon: ShieldCheck,
     title: "Human confirmation gate",
-    body: "The hedge preview requires three acknowledgements before a simulated order is recorded.",
+    body: "The hedge preview requires three acknowledgements before a paper hedge is recorded.",
   },
 ];
 
@@ -145,7 +145,7 @@ export default function MethodologyPage() {
                 <div className="flex gap-3">
                   <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-[#f59e0b]" />
                   <p className="text-sm leading-relaxed text-[#9ca3af]">
-                    Convexity Desk is a hackathon prototype and is not financial advice. The current execution path is simulation-only.
+                    Convexity Desk is not financial advice. It analyses risk and proposes hedges; it does not place orders on your behalf.
                   </p>
                 </div>
               </CardShell>
@@ -264,7 +264,7 @@ export default function MethodologyPage() {
                   <div>
                     <p className="text-sm font-semibold text-white">Risk preferences</p>
                     <p className="mt-1 text-xs leading-relaxed text-[#9ca3af]">
-                      Phase 12 settings let the user inspect local risk profile, max hedge size, max slippage, alert preferences, and integration mode. Wave 3 will persist these controls.
+                      Settings control the risk profile (sizing multiplier), a hard max-hedge cap and a slippage warning threshold. They are saved in the browser and applied server-side to every hedge plan.
                     </p>
                   </div>
                 </div>

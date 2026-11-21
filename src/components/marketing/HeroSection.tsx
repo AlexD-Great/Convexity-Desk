@@ -57,8 +57,8 @@ export function HeroSection() {
               transition={{ duration: 0.5, ease }}
               className="flex flex-wrap gap-2"
             >
-              <Badge variant="primary" dot>SoSoValue Buildathon</Badge>
-              <Badge variant="demo">Wave 2</Badge>
+              <Badge variant="live" dot>Live market data</Badge>
+              <Badge variant="demo">Multi-chain wallet scan</Badge>
               <Badge variant="blue">SoDEX Integration</Badge>
             </motion.div>
 

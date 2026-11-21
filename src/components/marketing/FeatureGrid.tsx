@@ -31,7 +31,7 @@ const FEATURES = [
   {
     icon: FileSearch,
     title: "SoSoValue Evidence Cards",
-    body: "News sentiment, ETF flow data, and token intelligence from SoSoValue — or typed fallback when APIs are unavailable.",
+    body: "ETF flows, news and the macro calendar from SoSoValue, scored into risk factors — clearly labelled if a source is down.",
     accent: "#60a5fa",
   },
   {

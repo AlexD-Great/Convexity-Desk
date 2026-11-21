@@ -132,7 +132,8 @@ export type OutcomeLedgerEntry = {
 };
 
 export type IntegrationMode = "live" | "fallback" | "mock" | "error";
-export type AppMode = "demo" | "mixed" | "live";
+/** Overall data health: every source live, some live, or none (sample data). */
+export type AppMode = "live" | "mixed" | "fallback";
 
 export type IntegrationDetail = {
   mode: IntegrationMode;

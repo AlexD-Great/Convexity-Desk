@@ -51,14 +51,6 @@ export function Topbar({ onMobileMenuToggle }: TopbarProps) {
           <ApiStatusBadge />
         </div>
 
-        {/* Market status placeholder */}
-        <div className="hidden md:flex items-center gap-1.5 rounded-md border border-[#1f2937] bg-[#111827] px-2.5 py-1.5">
-          <span className="h-1.5 w-1.5 rounded-full bg-[#f59e0b]" />
-          <span className="font-mono text-[10px] uppercase tracking-wide text-[#f59e0b]">
-            Fallback
-          </span>
-        </div>
-
         <WalletConnectButton compact />
       </div>
     </header>

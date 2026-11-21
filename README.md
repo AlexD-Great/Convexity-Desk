@@ -1,377 +1,57 @@
 # Convexity Desk
 
-> **Protect your crypto portfolio before the drawdown becomes obvious.**
+> Protect your crypto portfolio before the drawdown becomes obvious.
 
-Convexity Desk is a portfolio-protection and hedge-execution desk for crypto traders, SSI/index holders, and one-person on-chain fund managers. It reads a user's holdings, analyses market stress using SoSoValue intelligence and SoDEX market structure, then generates a clear, approval-gated hedge plan that can be previewed and later executed on SoDEX testnet.
+Convexity Desk reads your wallet, scores the downside risk building against it, and
+proposes a sized hedge — using live SoSoValue institutional data and live SoDEX
+market structure.
 
----
+**Live:** https://convexity-desk.vercel.app
 
-## Current Build Phase
+## What it does
 
-**Phase 12.5 — Basic Wallet Connection and Holdings Preview Sprint** *(complete)*
+**Portfolio → Risk Scan → Evidence → Hedge Plan → Preview → Confirm → Ledger**
 
-Wallet connection is now real instead of decorative. The app uses RainbowKit + wagmi + viem with TanStack Query providers at the root. The dashboard topbar opens the wallet modal, shows connected address, and allows account/disconnect through RainbowKit. Sidebar, dashboard overview, settings, portfolio, and scan pages all reflect wallet connection state. `/app/portfolio` now has `Demo Portfolio` and `Connected Wallet` modes. Connected Wallet mode reads native token balance and allowlisted ERC20 balances only; it does not claim full portfolio import. Risk scan remains demo-first in Wave 2 unless wallet holdings can be safely converted into the full portfolio model.
+- **Wallet scanning** — every token on Ethereum, Base, Arbitrum and Optimism (via Alchemy),
+  spam and dust filtered, wrapped assets rolled into their underlying, valued at live prices.
+- **Danger Score** — five deterministic factors:
+  US spot ETF flows, news pressure, portfolio concentration, SoDEX order-book stress,
+  and upcoming macro releases. Every factor cites the numbers behind it.
+- **Hedge plans** — BTC/ETH perp shorts sized to your risky exposure, Danger Score and
+  preferences (risk profile, max hedge %, max slippage), with slippage estimated by
+  walking the live SoDEX order book.
+- **Honest data** — every source reports live / stale / fallback; anything down is bannered.
+  Sample data is labelled and never shown as live.
 
-Supported wallet scope: Ethereum mainnet (`1`) and Sepolia (`11155111`). ValueChain is documented as a Wave 3 improvement until chain configuration is available. Supported ERC20 allowlist: USDC and WETH on Ethereum mainnet. Native balance is attempted on supported connected chains. USD values use fallback prices only where available and are labelled as estimates.
+Confirming a plan records a **paper hedge**. Convexity Desk does not place orders and is
+not financial advice.
 
-**Phase 12 — Methodology, Docs, and Settings Pages** *(complete)*
-
-`/methodology` now explains the five-factor Danger Score, factor sources, risk bands, hedge sizing logic, execution-preview assumptions, safety controls, and data-mode transparency. `/docs` now documents the runtime architecture, internal API routes, demo pipeline, env groups, live/fallback/demo semantics, and Wave 2 limitations. `/about` now presents the product thesis, target users, design principles, build status, and Wave 3 roadmap. `/app/settings` is now an interactive client screen with `/api/status` integration, local app mode controls, risk profile selection, max hedge/slippage sliders, alert toggles, wallet/testnet placeholders, and Wave 3 persistence notes. Stale Phase 5/Phase 12 copy cleaned up. Production build passes.
-
-**Phase 11 — Confirmation Gate and Outcome Ledger** *(complete)*
-
-`ConfirmationGate` — 3 required checkboxes, hedge summary strip, danger score context, progressive unlock, disclaimer. `OutcomeLedgerTable` — sortable by date, status badge per row, coverage before→after, order ID, notes. `/api/hedge/confirm` creates `OutcomeLedgerEntry` (status: pending, simulated, SIM-xxx order ID). `/api/outcomes` returns pre-seeded demo entries (avoided_loss, useful, neutral) plus session entries. `/app/outcomes` — metric cards, status filter tabs, full ledger table, persistence notice. `/app/hedge` updated with gate → confirmed state → outcome link. 0 TS errors.
-
-`src/lib/hedge/hedge-composer.ts` — instrument selection, danger score multiplier, hedge sizing (rounds to $1K), coverage % (hedge/hedgeable exposure), confidence score, rationale + risk builder, execution preview from SoDEX market data. `/api/hedge/generate` runs full pipeline (scan → compose → preview) in one POST. `/api/hedge/preview` refreshes preview only. `HedgePlanCard` (instrument, direction badge, size/coverage/confidence metric tiles, rationale, risks, stop condition). `ExecutionPreviewCard` (data rows, liquidity bar, categorised warnings). Full interactive `/app/hedge`: idle → generating → results (scan strip + gauge + plan + preview + confirm CTA) → error. 0 TS errors.
-
-`src/lib/risk/convexity-score.ts` — deterministic 5-factor Danger Score (instFlow×0.30 + narrative×0.20 + concentration×0.25 + microstructure×0.15 + eventProximity×0.10). Each factor has its own calculator, explanation generator, and evidence linker. `/api/scan/run` runs all adapters in parallel and returns `{ scan, evidenceCards, dataMode }`. `DangerScoreGauge` (animated SVG arc, 270° sweep), `RiskFactorCard` (score bar + explanation + contribution pts). Full interactive `/app/scan`: idle → scanning (animated steps) → results (gauge + 5 factor cards + evidence grid + hedge CTA) → error state. 0 TS errors.
-
-`src/lib/adapters/sosovalue.ts` — server-side adapter remains ready for `SOSOVALUE_API_KEY`, but SoSoValue is currently **fallback** because no API key has been issued yet. API access has been requested. Until the key is added, `/api/status` reports "SoSoValue: Fallback — API key not configured" and the app uses typed fallback evidence cards. `EvidenceCardList` labels the source clearly. 0 TS errors.
-
-`src/lib/adapters/sodex.ts` — attempts unsigned public/testnet reads from documented SoDEX endpoints (`testnet-gw.sodex.dev/api/v1` and configured env roots) for perps/spot tickers and book tickers, normalises market data, and falls back to typed BTC/ETH/SOL market data if the public gateway fails. `/api/market/sodex`, hedge previews, and microstructure stress use this adapter. Execution remains preview/simulation only; no live trade placement is implemented.
-
-Demo portfolio data in `src/lib/data/demo-portfolio.ts`. `/api/portfolio/demo` returns live data. `/app/portfolio` shows concentration warning, 4 metric cards, Recharts donut allocation chart with custom legend, exposure buckets panel (5 buckets with progress bars), and full asset table (amount, price, value, weight bar, risk contribution, beta bucket badge, hedgeable icon). 0 TS errors.
-
----
-
-## Project Status
-
-| Item | Status |
-|------|--------|
-| Planning docs | ✅ Complete |
-| Project setup (Next.js) | ✅ Complete |
-| Design system | ✅ Complete |
-| Landing page (header + hero) | ✅ Complete |
-| Landing page (story sections) | ✅ Complete |
-| Dashboard shell | ✅ Complete |
-| Portfolio module | ✅ Complete |
-| SoDEX adapter | ✅ Complete |
-| SoDEX adapter | ✅ Complete |
-| SoSoValue adapter | ✅ Complete |
-| Risk scan engine | ✅ Complete |
-| Hedge composer | ✅ Complete |
-| Confirmation + ledger | ✅ Complete |
-| Methodology + docs | ✅ Complete |
-| Wallet connection + holdings preview | ✅ Complete |
-| Wave 2 polish + deploy | ⏳ Pending — Phase 13 |
-
----
-
-## Product Thesis
-
-Most crypto tools tell users what to buy next. Convexity Desk focuses on what users **already hold**.
-
-The core question is:
-
-> "Given my current portfolio, what downside risk is building, what evidence supports that risk, and what is the cleanest hedge I can take before the market moves against me?"
-
-The core product flow is:
-
-**Portfolio → Risk Scan → Evidence → Hedge Plan → Execution Preview → Confirmation → Outcome Tracking**
-
----
-
-## Target Users
-
-1. **Crypto spot traders** — holding BTC, ETH, SOL, SOSO, or other assets who want to know when to reduce risk or hedge
-2. **SSI/index holders** — holding thematic crypto baskets who need protection when a full sector weakens
-3. **One-person fund managers** — solo traders managing portfolios who need a professional risk layer
-4. **Signal group admins** — people checking whether an existing exposure is dangerous before recommending action
-
----
-
-## Completed Features
-
-- [x] README.md — single source of truth
-- [x] WAVE_PROGRESS.md — hackathon progress tracker
-- [x] ARCHITECTURE.md — system architecture overview
-- [x] docs/PRD.md — full product requirements document
-- [x] .env.example — all environment variables documented
-- [x] Next.js 16.2.7 with App Router initialized
-- [x] TypeScript strict mode configured
-- [x] Tailwind CSS v4 configured
-- [x] shadcn/ui initialized (Tailwind v4 compatible)
-- [x] lucide-react, recharts, framer-motion, clsx, tailwind-merge, cva, zod installed
-- [x] Convexity Desk dark theme set in globals.css
-- [x] Space Grotesk heading font configured
-- [x] All 22 routes created (5 marketing + 6 app + 10 API + 1 404)
-- [x] Core TypeScript types defined in src/types/index.ts
-- [x] .gitignore configured
-- [x] Production build passes: 0 TypeScript errors, 0 build errors
-- [x] Design system: Container, Section, SectionHeader, Badge (10 variants), PrimaryButton, SecondaryButton, CardShell (5 variants), GradientText
-- [x] Barrel export via src/components/shared/index.ts
-- [x] /design-system preview page for visual verification
-- [x] Navbar — sticky, scroll-triggered backdrop blur, logo, nav links, mobile hamburger
-- [x] HeroDashboardPreview — realistic fake dashboard (Danger Score, risk factors, portfolio exposure, evidence, hedge plan)
-- [x] HeroSection — full-viewport, background glows + dot grid, framer-motion stagger, split layout
-- [x] Landing page at / wired up with Navbar + HeroSection
-- [x] DashboardShell (Sidebar + Topbar + DemoModeBanner + main area)
-- [x] Sidebar — logo, active nav links (usePathname), demo mode badge, wallet status (Phase 12.5 upgraded from placeholder)
-- [x] Topbar — page title, ApiStatusBadge (fetches /api/status), fallback badge, working wallet button
-- [x] MetricCard — reusable dashboard metric component
-- [x] DemoModeBanner — persistent demo mode notice with settings link
-- [x] ApiStatusBadge — client component fetching /api/status
-- [x] /app overview with metric cards, risk snapshot, action prompt, quick links
-- [x] All /app/* screens updated with structured empty states
-- [x] src/lib/data/demo-portfolio.ts — demo portfolio data (BTC/ETH/SOL/SOSO/USDC)
-- [x] /api/portfolio/demo — returns typed Portfolio from demo data
-- [x] AllocationChart — Recharts PieChart donut with custom tooltip and legend
-- [x] /app/portfolio — concentration warning, 4 metric cards, allocation chart, exposure buckets, full asset table
-
----
-
-## Pending Features
-
-- [ ] Design system primitives (Phase 2)
-- [ ] Landing page (public marketing)
-- [ ] Dashboard shell (/app layout)
-- [ ] Portfolio module with demo data
-- [x] SoDEX market data adapter
-- [x] SoSoValue intelligence adapter
-- [ ] Convexity Risk Scan engine (Danger Score)
-- [ ] Hedge composer and execution preview
-- [ ] Confirmation gate and outcome ledger
-- [x] Methodology and docs pages
-- [ ] Wave 2 polish and deployment
-
----
-
-## Tech Stack
-
-| Layer | Choice |
-|-------|--------|
-| Framework | Next.js 16.2.7 (App Router) |
-| Language | TypeScript (strict) |
-| Styling | Tailwind CSS |
-| UI Components | shadcn/ui + lucide-react |
-| Charts | Recharts |
-| Animation | Framer Motion |
-| Validation | Zod |
-| Wallet | RainbowKit + wagmi + viem (Phase 12.5 preview) |
-| Persistence (Wave 3) | Supabase or SQLite |
-| Deployment | Vercel |
-
----
-
-## Architecture Overview
-
-```
-convexity-desk/
-├── src/
-│   ├── app/                    # Next.js App Router pages
-│   │   ├── (marketing)/        # Public landing pages
-│   │   │   ├── page.tsx        # / — Landing
-│   │   │   ├── how-it-works/
-│   │   │   ├── methodology/
-│   │   │   ├── docs/
-│   │   │   └── about/
-│   │   ├── app/                # Protected dashboard
-│   │   │   ├── layout.tsx      # Dashboard shell
-│   │   │   ├── page.tsx        # /app — Overview
-│   │   │   ├── portfolio/
-│   │   │   ├── scan/
-│   │   │   ├── hedge/
-│   │   │   ├── outcomes/
-│   │   │   └── settings/
-│   │   └── api/                # Internal API routes
-│   │       ├── portfolio/
-│   │       ├── scan/
-│   │       ├── hedge/
-│   │       ├── evidence/
-│   │       ├── outcomes/
-│   │       ├── market/
-│   │       ├── intelligence/
-│   │       └── status/
-│   ├── components/
-│   │   ├── marketing/          # Landing page components
-│   │   ├── dashboard/          # Dashboard components
-│   │   └── shared/             # Shared UI primitives
-│   ├── lib/
-│   │   ├── adapters/           # External API adapters
-│   │   │   ├── sosovalue.ts
-│   │   │   └── sodex.ts
-│   │   ├── risk/               # Risk scoring logic
-│   │   │   └── convexity-score.ts
-│   │   ├── hedge/              # Hedge composition logic
-│   │   │   └── hedge-composer.ts
-│   │   └── data/               # Demo and fallback data
-│   └── types/                  # TypeScript type definitions
-├── docs/                       # Project documentation
-│   └── PRD.md
-├── public/                     # Static assets
-├── README.md
-├── ARCHITECTURE.md
-├── WAVE_PROGRESS.md
-├── .env.example
-└── .env.local                  # Not committed
-```
-
----
-
-## API Routes
-
-| Method | Route | Description |
-|--------|-------|-------------|
-| GET | `/api/portfolio/demo` | Returns demo portfolio |
-| POST | `/api/scan/run` | Runs Convexity Risk Scan |
-| GET | `/api/evidence` | Returns evidence cards for a scan |
-| POST | `/api/hedge/generate` | Generates hedge plan from scan |
-| POST | `/api/hedge/preview` | Returns SoDEX execution preview |
-| POST | `/api/hedge/confirm` | Simulates hedge confirmation (Wave 2) |
-| GET | `/api/outcomes` | Returns outcome ledger entries |
-| GET | `/api/status` | Returns API integration status |
-| GET | `/api/market/sodex` | SoDEX public market data |
-| GET | `/api/intelligence/sosovalue` | SoSoValue intelligence data |
-
----
-
-## App Routes
-
-| Route | Description |
-|-------|-------------|
-| `/` | Public landing page |
-| `/how-it-works` | Product workflow explanation |
-| `/methodology` | Danger Score and risk formula |
-| `/docs` | API integrations and architecture |
-| `/about` | Product vision |
-| `/app` | Dashboard overview |
-| `/app/portfolio` | Portfolio exposure map |
-| `/app/scan` | Run Convexity Risk Scan |
-| `/app/hedge` | Hedge recommendation + preview |
-| `/app/outcomes` | Outcome ledger |
-| `/app/settings` | API mode, alerts, wallet status |
-
----
-
-## Environment Variables
-
-See `.env.example` for full list. Key variables:
-
-```env
-# SoSoValue Integration
-SOSOVALUE_API_KEY=
-SOSOVALUE_BASE_URL=https://openapi.sosovalue.com
-
-# SoDEX Integration
-SODEX_BASE_URL=
-SODEX_TESTNET_BASE_URL=
-SODEX_API_KEY=
-
-# App Config
-NEXT_PUBLIC_APP_MODE=demo
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-```
-
----
-
-## Data Mode Status
-
-| Integration | Current Mode | Notes |
-|-------------|--------------|-------|
-| SoSoValue | `fallback` | API access requested; waiting for `SOSOVALUE_API_KEY` |
-| SoDEX Market | `live` or `fallback` | Adapter attempts unsigned public/testnet market reads, then typed fallback |
-| Portfolio Data | `demo` | Static Wave 2 demo portfolio |
-| Overall Mode | `demo` or `mixed` | `/api/status` reports live/fallback status |
-
-All live/fallback/mock status will be clearly labelled in the UI once implemented. The app will never claim mock data is live.
-
----
-
-## Known Issues
-
-- None — all 22 routes build cleanly
-
----
-
-## Wave 2 Roadmap
-
-| Phase | Description | Status |
-|-------|-------------|--------|
-| 0 | Planning docs | ✅ Complete |
-| 1 | Next.js project setup | ✅ Complete |
-| 2 | Design system + layout primitives | ✅ Complete |
-| 3 | Landing page — header + hero | ✅ Complete |
-| 4 | Landing page — story sections + footer | ✅ Complete |
-| 5 | Dashboard shell + navigation | ✅ Complete |
-| 6 | Portfolio module with demo data | ✅ Complete |
-| 7 | SoDEX market data adapter | ✅ Complete |
-| 8 | SoSoValue intelligence adapter | ✅ Complete |
-| 9 | Convexity Risk Scan engine | ✅ Complete |
-| 10 | Hedge composer + execution preview | ✅ Complete |
-| 11 | Confirmation gate + outcome ledger | ✅ Complete |
-| 12 | Methodology, docs, and settings pages | ✅ Complete |
-| 12.5 | Basic wallet connection and holdings preview | ✅ Complete |
-| 13 | Wave 2 polish + Vercel deployment | ⏳ Pending |
-
----
-
-## Wave 3 Roadmap
-
-| Phase | Description |
-|-------|-------------|
-| W3-1 | Supabase/SQLite persistence layer |
-| W3-2 | Full wallet portfolio indexing and persistence |
-| W3-3 | SoDEX testnet execution path |
-| W3-4 | Smart contract layer (HedgeReceiptLogger, RiskPolicyRegistry) |
-| W3-5 | Final demo script, architecture diagram, deployment polish |
-
----
-
-## How to Run Locally
-
-*(Available after Phase 1)*
+## Run locally
 
 ```bash
-# Install dependencies
 npm install
-
-# Copy environment variables
-cp .env.example .env.local
-
-# Run development server
-npm run dev
+cp .env.example .env.local   # add SOSOVALUE_API_KEY and ALCHEMY_API_KEY
+npm run dev                  # http://localhost:3000
 ```
 
----
+See [.env.example](.env.example) for every variable. Only `SOSOVALUE_API_KEY` is needed for
+live risk factors; `ALCHEMY_API_KEY` enables full wallet token discovery. SoDEX needs no key.
 
-## Deployment Notes
+## Stack
 
-- Target: Vercel
-- Environment variables must be configured in Vercel dashboard
-- Demo mode works without any API keys configured
-- SoSoValue live mode requires `SOSOVALUE_API_KEY`; API access has been requested but the key is not available yet
-- SoDEX public/testnet market reads are attempted without trade execution; order placement remains disabled until signing is safe
-- Wallet preview supports basic native balance plus allowlisted ERC20 reads only; full portfolio indexing is planned for Wave 3
+Next.js 16 (App Router, Turbopack) · React 19 · TypeScript · Tailwind CSS 4 ·
+TanStack Query · RainbowKit + wagmi 2 + viem · Recharts · Framer Motion · Vercel
 
----
+## Docs
 
-## Disclaimer
+- [ARCHITECTURE.md](ARCHITECTURE.md) — data sources, pipelines, formulas, limitations
+- `/methodology` and `/docs` in the app — user-facing explanation and API reference
+- [docs/archive/](docs/archive/) — the original hackathon PRD and progress log (historical)
 
-> Convexity Desk is a hackathon prototype. It is not financial advice. All hedge plans are for research, simulation, or testnet demonstration unless clearly stated otherwise. Users are responsible for all trading decisions.
+## Roadmap
 
----
-
-## Changelog
-
-| Date | Phase | Description |
-|------|-------|-------------|
-| 2026-06-01 | Phase 0 | Initialized planning docs — README, WAVE_PROGRESS, ARCHITECTURE, PRD, .env.example |
-| 2026-06-01 | Phase 1 | Next.js 16.2.7 project setup — Tailwind v4, shadcn/ui, all packages, 22 routes, TypeScript types, dark theme |
-| 2026-06-02 | Phase 2 | Design system — Container, Section, SectionHeader, Badge, PrimaryButton, SecondaryButton, CardShell, GradientText, /design-system preview |
-| 2026-06-02 | Phase 3 | Landing page header + hero — Navbar (sticky/blur/mobile), HeroSection (split layout, animations), HeroDashboardPreview (realistic product UI) |
-| 2026-06-02 | Phase 4 | Full landing page — ProblemSection, HowItWorksSection, ProductPreviewSection, FeatureGrid, EcosystemSection, ComparisonSection, CTASection, Footer (2026) |
-| 2026-06-02 | Phase 5 | Dashboard shell — DashboardShell, Sidebar (active nav), Topbar (API status), DemoModeBanner, MetricCard, all /app/* screens updated |
-| 2026-06-02 | Phase 6 | Portfolio module — demo data, /api/portfolio/demo, AllocationChart (Recharts), exposure buckets, asset table, concentration warning |
-| 2026-06-02 | Phase 7 | SoDEX adapter — live fetch attempt, 4 endpoint patterns, normaliser, 60s cache, typed fallback, /api/market/sodex, /api/status updated, SoDEXMarketPreview UI |
-| 2026-06-02 | Phase 8 | SoSoValue adapter — live fetch path prepared, sentiment scoring, 6-card fallback, /api/intelligence/sosovalue, /api/status updated, EvidenceCardList UI |
-| 2026-06-06 | Integration honesty | SoSoValue marked fallback with reason "API key not configured"; SoDEX adapter updated to attempt documented unsigned public/testnet market reads; execution remains simulation-only |
-| 2026-06-06 | Phase 12.5 | Added RainbowKit/wagmi wallet connection, connected address display, wallet status in dashboard/settings, native balance preview, mainnet USDC/WETH allowlist reads, portfolio Demo/Connected Wallet modes, and conservative scan messaging |
-| 2026-06-02 | Phase 9 | Risk scan engine — convexity-score.ts (5-factor formula), /api/scan/run, DangerScoreGauge (SVG), RiskFactorCard, full interactive /app/scan (idle/scanning/results/error) |
-
----
-
-## Next Recommended Build Step
-
-**Phase 13: Wave 2 Polish + Vercel Deployment**
-
-Run final responsive polish, verify all routes including wallet disconnected/connected states, clean remaining documentation drift, and prepare deployment.
+1. Durable storage for the outcome ledger and preferences
+2. Entry-price tracking so each hedge is scored on what actually happened; Danger Score history
+3. SoDEX testnet order placement behind the confirmation gate, with size/slippage limits
+4. Alerts when the Danger Score crosses a threshold
+5. Tests for the risk engine and hedge sizing

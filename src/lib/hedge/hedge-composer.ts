@@ -189,7 +189,8 @@ function buildExecutionPreview(
   plan: HedgePlan,
   marketData: SoDEXMarketData,
   marketMode: ExecutionPreview["marketMode"],
-  baseAsset: string
+  baseAsset: string,
+  maxSlippageBps?: number
 ): ExecutionPreview {
   const market = findMarket(marketData, baseAsset);
   const warnings: string[] = [];
@@ -227,6 +228,10 @@ function buildExecutionPreview(
         } funding while the hedge is open.`
       );
     if (marketData.stale) warnings.push("Market data is a recent snapshot — the latest SoDEX read failed.");
+    if (maxSlippageBps !== undefined && slippageBps > maxSlippageBps)
+      warnings.push(
+        `Estimated slippage ${slippageBps} bps is above your ${maxSlippageBps} bps limit. Reduce size or use a limit order.`
+      );
   }
   warnings.push("Preview only — order placement is not enabled yet. No real order will be placed.");
   warnings.push(
@@ -260,14 +265,25 @@ function buildExecutionPreview(
 export function composeHedgePlan(
   portfolio: Portfolio,
   scan: RiskScan,
-  profile: RiskProfile = "balanced"
+  profile: RiskProfile = "balanced",
+  limits: { maxHedgePct?: number } = {}
 ): HedgePlan {
   const { instrument, baseAsset } = selectInstrument(portfolio);
-  const sizeUsd = hedgeSize(portfolio, scan.dangerScore, profile);
+  const uncapped = hedgeSize(portfolio, scan.dangerScore, profile);
+  const riskyUsd = portfolio.assets
+    .filter((a) => a.betaBucket !== "STABLE")
+    .reduce((s, a) => s + a.valueUsd, 0);
+  const capUsd = limits.maxHedgePct !== undefined ? (riskyUsd * limits.maxHedgePct) / 100 : Infinity;
+  const capped = uncapped > capUsd;
+  const sizeUsd = capped ? Math.floor(capUsd / roundStep(capUsd)) * roundStep(capUsd) : uncapped;
   const coverage = computeCoverage(portfolio, sizeUsd, baseAsset);
   const confidence = computeConfidence(scan.dangerScore, coverage);
   const rationale = buildRationale(portfolio, scan.dangerScore, instrument, baseAsset);
   const risks = buildRisks(scan.dangerScore, sizeUsd);
+  if (capped)
+    risks.push(
+      `Size capped at your ${limits.maxHedgePct}% max-hedge setting (the model suggested $${uncapped.toLocaleString()}).`
+    );
 
   return {
     id: `hedge-${Date.now()}`,
@@ -289,9 +305,10 @@ export function composeHedgePlan(
 export function buildPreview(
   plan: HedgePlan,
   marketData: SoDEXMarketData,
-  marketMode: ExecutionPreview["marketMode"]
+  marketMode: ExecutionPreview["marketMode"],
+  opts: { maxSlippageBps?: number } = {}
 ): ExecutionPreview {
   // Extract base asset from instrument (e.g. "BTC-PERP/USDC" → "BTC")
   const baseAsset = plan.instrument.split("-")[0].toUpperCase();
-  return buildExecutionPreview(plan, marketData, marketMode, baseAsset);
+  return buildExecutionPreview(plan, marketData, marketMode, baseAsset, opts.maxSlippageBps);
 }

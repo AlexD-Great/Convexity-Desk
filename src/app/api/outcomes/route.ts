@@ -8,8 +8,7 @@ export async function GET() {
   return NextResponse.json({
     entries,
     total: entries.length,
-    mode: "demo",
     persistenceNote:
-      "Wave 2: in-memory store — resets on server restart. Wave 3 will add Supabase persistence.",
+      "Entries are kept in server memory: they reset when the server restarts and may not appear across all requests in production.",
   });
 }

@@ -16,6 +16,8 @@ import {
 } from "lucide-react";
 import { useAccount } from "wagmi";
 import { cn } from "@/lib/utils";
+import { usePortfolioSource } from "@/hooks/use-portfolio-source";
+import { MODE_COLOR, MODE_LABEL, useIntegrationStatus } from "@/hooks/use-integration-status";
 
 const PRIMARY_NAV = [
   { label: "Overview", href: "/app", icon: LayoutDashboard, exact: true },
@@ -72,6 +74,8 @@ interface SidebarProps {
 
 export function Sidebar({ mobileOpen, onClose }: SidebarProps) {
   const { address, isConnected, chain } = useAccount();
+  const { source } = usePortfolioSource();
+  const { data: status } = useIntegrationStatus();
   const shortAddress = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "";
 
   const sidebarContent = (
@@ -98,13 +102,23 @@ export function Sidebar({ mobileOpen, onClose }: SidebarProps) {
         </button>
       </div>
 
-      {/* Mode badge */}
+      {/* Source + data health */}
       <div className="px-4 py-3 border-b border-[#1f2937]">
-        <div className="flex items-center gap-2 rounded-lg border border-[#7cffb2]/15 bg-[#7cffb2]/[0.06] px-3 py-2">
-          <span className="h-1.5 w-1.5 rounded-full bg-[#7cffb2] animate-pulse" />
-          <span className="font-mono text-[10px] uppercase tracking-widest text-[#7cffb2]">
-            Demo Mode
+        <div className="flex items-center justify-between gap-2 rounded-lg border border-[#1f2937] bg-[#111827] px-3 py-2">
+          <span className="font-mono text-[10px] uppercase tracking-widest text-[#9ca3af]">
+            {source === "wallet" ? "Your wallet" : "Demo holdings"}
           </span>
+          {status && (
+            <span className="flex items-center gap-1.5" title={`${status.details.sosovalue.label}\n${status.details.sodex.label}`}>
+              <span
+                className={cn("h-1.5 w-1.5 rounded-full", status.mode === "live" && "animate-pulse")}
+                style={{ backgroundColor: MODE_COLOR[status.mode] }}
+              />
+              <span className="font-mono text-[10px] uppercase tracking-widest" style={{ color: MODE_COLOR[status.mode] }}>
+                {MODE_LABEL[status.mode]}
+              </span>
+            </span>
+          )}
         </div>
       </div>
 
@@ -136,7 +150,7 @@ export function Sidebar({ mobileOpen, onClose }: SidebarProps) {
               {isConnected ? shortAddress : "No wallet connected"}
             </p>
             <p className="font-mono text-[10px] text-[#4b5563]">
-              {isConnected ? chain?.name ?? "Unknown network" : "Wallet preview ready"}
+              {isConnected ? chain?.name ?? "Unknown network" : "Connect to scan your holdings"}
             </p>
           </div>
         </div>

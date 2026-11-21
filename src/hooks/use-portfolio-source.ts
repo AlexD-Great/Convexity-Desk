@@ -55,6 +55,8 @@ export function usePortfolioSource() {
     canUseWallet: Boolean(isConnected && address),
     /** POST body for /api/scan/run and /api/hedge/generate */
     requestBody: source === "wallet" && address ? JSON.stringify({ address }) : "{}",
+    /** Same target as an object, for merging with other request fields */
+    target: (source === "wallet" && address ? { address } : {}) as { address?: string },
     label: source === "wallet" ? "Your wallet" : "Demo holdings",
   };
 }

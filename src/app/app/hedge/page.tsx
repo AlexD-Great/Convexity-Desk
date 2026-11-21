@@ -15,6 +15,7 @@ import { Badge } from "@/components/shared/Badge";
 import { PrimaryButton } from "@/components/shared/PrimaryButton";
 import { PortfolioSourceToggle } from "@/components/dashboard/PortfolioSourceToggle";
 import { usePortfolioSource } from "@/hooks/use-portfolio-source";
+import { useHedgePreferences } from "@/hooks/use-hedge-preferences";
 
 type PageState = "idle" | "generating" | "done" | "gate" | "confirmed" | "error";
 
@@ -64,7 +65,7 @@ function IdleState({ onGenerate, sourceLabel }: { onGenerate: () => void; source
         </Link>
       </div>
       <p className="font-mono text-[10px] text-[#4b5563]">
-        {sourceLabel} · Balanced risk profile · Preview only
+        {sourceLabel} · Preview only
       </p>
     </motion.div>
   );
@@ -117,7 +118,7 @@ function ConfirmedState({ orderId }: { orderId: string }) {
           Hedge preview confirmed
         </p>
         <p className="text-sm text-[#9ca3af]">
-          Simulated order recorded in the outcome ledger.
+          Paper hedge recorded in the outcome ledger. No exchange order was placed.
         </p>
         <p className="font-mono text-xs text-[#7cffb2]">Order ID: {orderId}</p>
       </div>
@@ -245,7 +246,7 @@ function ResultsState({
               Ready to confirm this hedge preview?
             </p>
             <p className="mt-0.5 text-xs text-[#9ca3af]">
-              Three required acknowledgements, then your simulated order is recorded in the outcome ledger.
+              Three required acknowledgements, then the plan is recorded as a paper hedge in the outcome ledger.
             </p>
           </div>
           <PrimaryButton size="md" onClick={onShowGate}>
@@ -266,6 +267,7 @@ export default function HedgePage() {
   const [confirmedOrderId, setConfirmedOrderId] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const target = usePortfolioSource();
+  const { prefs } = useHedgePreferences();
 
   const generate = async () => {
     setState("generating");
@@ -275,7 +277,7 @@ export default function HedgePage() {
       const res = await fetch("/api/hedge/generate", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: target.requestBody,
+        body: JSON.stringify({ ...target.target, ...prefs }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? `HTTP ${res.status}`);
@@ -320,7 +322,10 @@ export default function HedgePage() {
             <div className="mb-2 flex justify-center">
               <PortfolioSourceToggle />
             </div>
-            <IdleState onGenerate={generate} sourceLabel={target.label} />
+            <IdleState
+              onGenerate={generate}
+              sourceLabel={`${target.label} · ${prefs.riskProfile} profile · ${prefs.maxHedgePct}% max hedge`}
+            />
           </motion.div>
         )}
         {state === "generating" && (

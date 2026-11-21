@@ -65,7 +65,7 @@ export function Navbar() {
           {/* Desktop CTAs */}
           <div className="hidden lg:flex items-center gap-2.5">
             <SecondaryButton href="/app" size="sm" variant="ghost">
-              View Demo
+              Open App
             </SecondaryButton>
             <PrimaryButton href="/app" size="sm">
               Launch Desk
@@ -104,7 +104,7 @@ export function Navbar() {
                 variant="outline"
                 className="w-full justify-center"
               >
-                View Demo
+                Open App
               </SecondaryButton>
               <PrimaryButton href="/app" size="md" className="w-full justify-center">
                 Launch Desk

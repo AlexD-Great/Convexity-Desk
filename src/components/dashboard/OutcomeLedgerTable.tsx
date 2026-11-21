@@ -23,8 +23,8 @@ export function OutcomeLedgerTable({ entries }: OutcomeLedgerTableProps) {
       <div className="flex flex-col items-center justify-center py-16 gap-3 text-center rounded-xl border border-[#1f2937] bg-[#0b1020]">
         <p className="text-sm font-semibold text-white">No hedge outcomes yet</p>
         <p className="text-xs text-[#9ca3af] max-w-xs">
-          Confirm a hedge preview to create your first ledger entry. Entries persist for the current
-          session.
+          Confirm a hedge plan to record your first paper hedge here. Entries are kept in server
+          memory for now.
         </p>
       </div>
     );
@@ -94,7 +94,7 @@ export function OutcomeLedgerTable({ entries }: OutcomeLedgerTableProps) {
                     dot
                   >
                     {entry.actionTaken === "simulated"
-                      ? "Simulated"
+                      ? "Paper"
                       : entry.actionTaken === "testnet_executed"
                       ? "Testnet"
                       : "Cancelled"}

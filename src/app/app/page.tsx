@@ -19,6 +19,7 @@ import { PrimaryButton } from "@/components/shared/PrimaryButton";
 import { WalletConnectButton } from "@/components/wallet/WalletConnectButton";
 import { useWalletHoldings } from "@/hooks/use-wallet-holdings";
 import { usePortfolioSource } from "@/hooks/use-portfolio-source";
+import { useHedgePreferences } from "@/hooks/use-hedge-preferences";
 import { PortfolioSourceToggle } from "@/components/dashboard/PortfolioSourceToggle";
 import type { HedgePlan, RiskScan } from "@/types";
 
@@ -39,8 +40,9 @@ function levelVariant(level: RiskScan["riskLevel"]) {
 export default function AppOverviewPage() {
   const wallet = useWalletHoldings();
   const target = usePortfolioSource();
+  const { prefs } = useHedgePreferences();
   const live = useQuery({
-    queryKey: ["overview", "generate", target.source, target.address ?? ""],
+    queryKey: ["overview", "generate", target.source, target.address ?? "", prefs],
     staleTime: 60_000,
     refetchInterval: 120_000,
     retry: 1,
@@ -48,7 +50,7 @@ export default function AppOverviewPage() {
       const res = await fetch("/api/hedge/generate", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: target.requestBody,
+        body: JSON.stringify({ ...target.target, ...prefs }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? `HTTP ${res.status}`);

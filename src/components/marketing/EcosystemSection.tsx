@@ -11,21 +11,21 @@ const ECOSYSTEM = [
     name: "SoSoValue",
     role: "Intelligence Layer",
     description:
-      "News flash, ETF flow data, token sentiment, and institutional market intelligence. Powers narrative and institutional flow factors in the Danger Score.",
-    badge: "Live / Fallback" as const,
-    badgeVariant: "fallback" as const,
+      "Spot ETF flows, news, and the US macro calendar. Powers the institutional flow, narrative and event proximity factors in the Danger Score.",
+    badge: "Live" as const,
+    badgeVariant: "live" as const,
     color: "#60a5fa",
-    points: ["ETF inflow / outflow tracking", "News sentiment signals", "Token market intelligence"],
+    points: ["BTC & ETH spot ETF flows", "News and hot-news signals", "Macro release calendar"],
   },
   {
     name: "SoDEX",
     role: "Execution Layer",
     description:
       "Public market data, orderbook depth, and spread analysis. Powers the microstructure stress factor and the execution preview for every hedge recommendation.",
-    badge: "Live / Fallback" as const,
-    badgeVariant: "fallback" as const,
+    badge: "Live · mainnet" as const,
+    badgeVariant: "live" as const,
     color: "#7cffb2",
-    points: ["Orderbook depth & spread", "Execution preview", "Testnet order placement (Wave 3)"],
+    points: ["Order-book depth & spread", "Book-walk slippage estimates", "Prices and 30-day volatility"],
   },
   {
     name: "SSI Index",
@@ -41,11 +41,11 @@ const ECOSYSTEM = [
     name: "ValueChain",
     role: "Infrastructure",
     description:
-      "Trading infrastructure and settlement backbone. Provides the execution pathway for Wave 3 testnet order placement and smart contract anchoring.",
-    badge: "Wave 3" as const,
+      "Settlement layer behind SoDEX. The planned home for on-chain order execution and verifiable hedge receipts.",
+    badge: "Planned" as const,
     badgeVariant: "primary" as const,
     color: "#f59e0b",
-    points: ["Trade execution backbone", "Smart contract layer", "Outcome anchoring (Wave 3)"],
+    points: ["Trade execution backbone", "Smart contract layer", "On-chain outcome receipts"],
   },
 ];
 

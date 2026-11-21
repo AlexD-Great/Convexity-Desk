@@ -47,38 +47,37 @@ const PRINCIPLES = [
   "Start from the portfolio, not a watchlist.",
   "Explain risk before recommending action.",
   "Use AI-shaped explanation only where the underlying logic remains inspectable.",
-  "Label live, fallback, and demo data clearly.",
+  "Never present sample or stale data as live — every source is labelled.",
   "Require human confirmation before any execution path.",
   "Track outcomes so recommendations can be judged later.",
 ];
 
 const BUILD_STATUS = [
-  { label: "Wave 2 Core Flow", status: "Complete", variant: "success" as const },
-  { label: "SoSoValue API", status: "Access requested", variant: "fallback" as const },
-  { label: "SoDEX Market Reads", status: "Public/testnet attempt", variant: "live" as const },
-  { label: "Wallet Preview", status: "Basic holdings", variant: "success" as const },
-  { label: "Outcome Ledger", status: "In-memory", variant: "demo" as const },
-  { label: "Trade Execution", status: "Wave 3", variant: "default" as const },
-  { label: "Persistence", status: "Wave 3", variant: "default" as const },
+  { label: "SoSoValue data", status: "Live", variant: "live" as const },
+  { label: "SoDEX market data", status: "Live · mainnet", variant: "live" as const },
+  { label: "Wallet scanning", status: "4 chains", variant: "success" as const },
+  { label: "Risk scan & hedge plans", status: "Live", variant: "success" as const },
+  { label: "Outcome ledger", status: "In memory", variant: "fallback" as const },
+  { label: "Order placement", status: "Not yet", variant: "default" as const },
 ];
 
 const ROADMAP = [
   {
-    phase: "Wave 2",
-    title: "Polished risk-to-hedge demo",
-    body: "Portfolio map, risk scan, evidence cards, hedge plan, SoDEX preview, confirmation gate, and outcome ledger.",
+    phase: "Now",
+    title: "Live risk desk",
+    body: "Wallet scanning across Ethereum, Base, Arbitrum and Optimism; live SoSoValue flows, news and macro; SoDEX mainnet prices and order books; sized hedge plans with book-walk slippage.",
     active: true,
   },
   {
-    phase: "Wave 3",
-    title: "Execution and persistence",
-    body: "Full wallet portfolio indexing, SoDEX testnet execution, EIP-712 signing, Supabase or SQLite persistence, and smart-contract receipts.",
+    phase: "Next",
+    title: "Memory and accountability",
+    body: "Durable storage for the outcome ledger and settings, entry-price tracking so each hedge is scored on what actually happened, and Danger Score history.",
     active: false,
   },
   {
-    phase: "Beyond",
-    title: "A real protection desk",
-    body: "Live wallet portfolios, richer scenario simulation, saved risk policies, alerts, and auditable hedge-performance analytics.",
+    phase: "Later",
+    title: "Execution and alerts",
+    body: "SoDEX testnet order placement behind the confirmation gate with size and slippage limits, then alerts when the Danger Score crosses your threshold.",
     active: false,
   },
 ];
@@ -89,7 +88,7 @@ export default function AboutPage() {
       <Section className="bg-[#05070d]">
         <Container>
           <div className="mx-auto max-w-3xl text-center">
-            <Badge variant="demo" dot>SoSoValue Buildathon Wave 2</Badge>
+            <Badge variant="live" dot>Live on SoSoValue + SoDEX data</Badge>
             <h1
               className="mt-6 text-4xl font-bold tracking-tight text-white sm:text-6xl"
               style={{ fontFamily: "var(--font-space-grotesk)" }}
@@ -187,8 +186,8 @@ export default function AboutPage() {
             <div>
               <SectionHeader
                 eyebrow="Build Status"
-                title="Wave 2 is a complete simulated workflow."
-                subtitle="The current application is deployment-ready as a hackathon demo, with explicit boundaries around live data, persistence, and execution."
+                title="What works today."
+                subtitle="The full risk-to-hedge flow runs on live data. Storage and order placement are the remaining pieces."
                 align="left"
               />
               <div className="mt-8 grid gap-3 sm:grid-cols-2">
@@ -203,10 +202,10 @@ export default function AboutPage() {
               </div>
               <CardShell variant="warning" className="mt-4">
                 <p className="font-mono text-xs uppercase tracking-widest text-[#f59e0b]">
-                  Prototype Disclaimer
+                  Disclaimer
                 </p>
                 <p className="mt-3 text-sm leading-relaxed text-[#9ca3af]">
-                  Convexity Desk is not financial advice. All Wave 2 hedge plans are research, simulation, or testnet preparation unless clearly stated otherwise.
+                  Convexity Desk is not financial advice. Hedge plans are analysis only — no orders are placed on your behalf, and you remain responsible for every trading decision.
                 </p>
               </CardShell>
             </div>
@@ -218,8 +217,8 @@ export default function AboutPage() {
         <Container>
           <SectionHeader
             eyebrow="Roadmap"
-            title="From demo desk to execution infrastructure."
-            subtitle="The build moves from transparent simulation toward persistent, wallet-connected, testnet-confirmed protection workflows."
+            title="Where it goes next."
+            subtitle="From live analysis to an accountable, executable protection workflow."
             align="center"
           />
           <div className="mx-auto mt-12 grid max-w-5xl gap-4 lg:grid-cols-3">

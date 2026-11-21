@@ -404,8 +404,16 @@ function buildSentimentSummary(flows: EtfFlowSummary[], news: EvidenceCard[], ev
 // ─────────────────────────────────────────────
 
 function buildFallbackIntelligence(): SoSoValueIntelligence {
+  // Illustrative cards only — re-attributed and titled so they can never be
+  // mistaken for real SoSoValue headlines.
+  const sampleCards: EvidenceCard[] = FALLBACK_EVIDENCE.map((c) => ({
+    ...c,
+    source: "Mock",
+    title: `Sample — ${c.title}`,
+    url: undefined,
+  }));
   return {
-    evidenceCards: FALLBACK_EVIDENCE,
+    evidenceCards: sampleCards,
     narrativePressureScore: computeNarrativePressure(FALLBACK_EVIDENCE),
     institutionalFlowScore: computeInstitutionalFlowPressure(FALLBACK_EVIDENCE),
     eventProximityScore: 50,

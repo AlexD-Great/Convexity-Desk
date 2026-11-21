@@ -12,7 +12,7 @@ import Link from "next/link";
 type OutcomesResponse = {
   entries: OutcomeLedgerEntry[];
   total: number;
-  mode: string;
+  mode?: string;
   persistenceNote: string;
 };
 
@@ -139,7 +139,7 @@ export default function OutcomesPage() {
       {/* Persistence notice */}
       <CardShell variant="elevated" padding="sm">
         <div className="flex items-start gap-2.5">
-          <Badge variant="fallback" dot>Wave 2</Badge>
+          <Badge variant="fallback" dot>Not persisted</Badge>
           <p className="text-xs text-[#6b7280] leading-relaxed">
             {data?.persistenceNote ?? "In-memory store — entries persist for the current server session only."}{" "}
             <Link href="/app/hedge" className="text-[#7cffb2] hover:underline">

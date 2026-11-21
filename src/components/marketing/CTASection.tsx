@@ -60,7 +60,7 @@ export function CTASection() {
 
           {/* Sub-note */}
           <p className="text-xs text-[#6b7280]">
-            Demo mode active — no wallet required. Live API mode available when SoSoValue and SoDEX keys are configured.
+            No sign-up. Connect a browser wallet to scan your own holdings, or explore with the sample portfolio.
           </p>
         </motion.div>
       </Container>

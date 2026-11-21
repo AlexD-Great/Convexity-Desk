@@ -3,13 +3,34 @@ import { getSoSoValueIntelligence } from "@/lib/adapters/sosovalue";
 import { getSoDEXMarketData } from "@/lib/adapters/sodex";
 import { calculateDangerScore } from "@/lib/risk/convexity-score";
 import { composeHedgePlan, buildPreview } from "@/lib/hedge/hedge-composer";
-import { PortfolioError, readScanTarget, resolvePortfolio } from "@/lib/portfolio/resolve-portfolio";
+import { PortfolioError, readJsonBody, resolvePortfolio, scanTargetFrom } from "@/lib/portfolio/resolve-portfolio";
+import type { RiskProfile } from "@/types";
 
 export const dynamic = "force-dynamic";
 
-/** POST body: {} for the demo holdings, or { address: "0x…" } for a wallet. */
+const PROFILES: RiskProfile[] = ["conservative", "balanced", "aggressive"];
+const clampNum = (v: unknown, lo: number, hi: number, dflt: number) => {
+  const n = Number(v);
+  return Number.isFinite(n) ? Math.min(hi, Math.max(lo, n)) : dflt;
+};
+
+/**
+ * POST body (all optional):
+ *   address        — wallet to analyse (omit for demo holdings)
+ *   riskProfile    — conservative | balanced | aggressive
+ *   maxHedgePct    — cap as % of non-stablecoin exposure (5–100)
+ *   maxSlippageBps — preview warns above this (1–200)
+ */
 export async function POST(request: Request) {
-  const target = await readScanTarget(request);
+  const body = await readJsonBody(request);
+  const target = scanTargetFrom(body);
+  const profile: RiskProfile = PROFILES.includes(body.riskProfile as RiskProfile)
+    ? (body.riskProfile as RiskProfile)
+    : "balanced";
+  const limits = {
+    maxHedgePct: clampNum(body.maxHedgePct, 5, 100, 50),
+    maxSlippageBps: clampNum(body.maxSlippageBps, 1, 200, 25),
+  };
   let resolved;
   try {
     resolved = await resolvePortfolio(target);
@@ -30,14 +51,18 @@ export async function POST(request: Request) {
     marketResult.data
   );
 
-  const plan = composeHedgePlan(portfolio, scan, "balanced");
-  const preview = buildPreview(plan, marketResult.data, marketResult.mode);
+  const plan = composeHedgePlan(portfolio, scan, profile, { maxHedgePct: limits.maxHedgePct });
+  const preview = buildPreview(plan, marketResult.data, marketResult.mode, {
+    maxSlippageBps: limits.maxSlippageBps,
+  });
 
   return NextResponse.json({
     scan,
     portfolio,
     portfolioSource: resolved.source,
     wallet: resolved.wallet,
+    preferences: { riskProfile: profile, ...limits },
+    evidenceCards: intelligenceResult.data.evidenceCards,
     hedgePlan: plan,
     executionPreview: preview,
     dataMode: {

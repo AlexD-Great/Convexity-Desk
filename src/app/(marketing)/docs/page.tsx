@@ -21,48 +21,50 @@ import { PrimaryButton } from "@/components/shared/PrimaryButton";
 import { SecondaryButton } from "@/components/shared/SecondaryButton";
 
 const API_ROUTES = [
-  { method: "GET", route: "/api/portfolio/demo", desc: "Returns the static Wave 2 demo portfolio.", source: "Internal" },
-  { method: "POST", route: "/api/scan/run", desc: "Runs portfolio, intelligence, market data, and Danger Score calculation.", source: "Pipeline" },
-  { method: "GET", route: "/api/evidence", desc: "Returns SoSoValue evidence cards with live/fallback mode.", source: "SoSoValue" },
-  { method: "POST", route: "/api/hedge/generate", desc: "Runs scan, composes hedge plan, and builds execution preview.", source: "Pipeline" },
+  { method: "GET", route: "/api/portfolio/demo", desc: "Sample holdings valued at live prices.", source: "Internal" },
+  { method: "GET", route: "/api/portfolio/wallet", desc: "A wallet's holdings across 4 chains (?address=0x…), spam filtered.", source: "Alchemy / RPC" },
+  { method: "GET", route: "/api/prices", desc: "Live prices for symbols (?symbols=BTC,ETH).", source: "SoDEX" },
+  { method: "POST", route: "/api/scan/run", desc: "Five-factor Danger Score for the demo holdings or { address }.", source: "Pipeline" },
+  { method: "POST", route: "/api/hedge/generate", desc: "Scan + sized hedge plan + order-book execution preview.", source: "Pipeline" },
   { method: "POST", route: "/api/hedge/preview", desc: "Refreshes the SoDEX execution preview for a hedge plan.", source: "SoDEX" },
-  { method: "POST", route: "/api/hedge/confirm", desc: "Creates a simulated hedge outcome ledger entry.", source: "Internal" },
-  { method: "GET", route: "/api/outcomes", desc: "Returns seeded and session-created outcome ledger entries.", source: "Internal" },
-  { method: "GET", route: "/api/market/sodex", desc: "Returns SoDEX market data adapter response.", source: "SoDEX" },
-  { method: "GET", route: "/api/intelligence/sosovalue", desc: "Returns SoSoValue intelligence adapter response.", source: "SoSoValue" },
-  { method: "GET", route: "/api/status", desc: "Reports SoSoValue, SoDEX, and overall app data mode.", source: "Status" },
+  { method: "POST", route: "/api/hedge/confirm", desc: "Records a confirmed plan as a paper hedge.", source: "Internal" },
+  { method: "GET", route: "/api/outcomes", desc: "Outcome ledger entries (in memory).", source: "Internal" },
+  { method: "GET", route: "/api/market/sodex", desc: "SoDEX mainnet tickers, order-book depth and stress.", source: "SoDEX" },
+  { method: "GET", route: "/api/intelligence/sosovalue", desc: "ETF flows, news and macro calendar with factor scores.", source: "SoSoValue" },
+  { method: "GET", route: "/api/evidence", desc: "Evidence cards only.", source: "SoSoValue" },
+  { method: "GET", route: "/api/status", desc: "Health of each data source and overall status.", source: "Status" },
 ];
 
 const PIPELINE_STEPS = [
-  "Load demo portfolio",
-  "Fetch SoSoValue intelligence",
-  "Fetch SoDEX market data",
+  "Read wallet holdings (or load sample holdings)",
+  "Price everything on SoDEX, filter spam and dust",
+  "Fetch SoSoValue ETF flows, news and macro calendar",
+  "Measure SoDEX order-book depth, spread and volatility",
   "Calculate five-factor Danger Score",
-  "Compose hedge plan",
-  "Build execution preview",
-  "Confirm simulated outcome",
+  "Size hedge plan within your limits",
+  "Walk the order book for slippage, then confirm as a paper hedge",
 ];
 
 const ENV_GROUPS = [
-  {
-    title: "App",
-    vars: ["NEXT_PUBLIC_APP_MODE", "NEXT_PUBLIC_APP_URL", "NEXT_PUBLIC_APP_NAME"],
-  },
   {
     title: "SoSoValue",
     vars: ["SOSOVALUE_API_KEY", "SOSOVALUE_BASE_URL"],
   },
   {
+    title: "Wallet scanning",
+    vars: ["ALCHEMY_API_KEY", "RPC_URL_ETHEREUM", "RPC_URL_BASE", "RPC_URL_ARBITRUM", "RPC_URL_OPTIMISM"],
+  },
+  {
     title: "SoDEX",
-    vars: ["SODEX_BASE_URL", "SODEX_TESTNET_BASE_URL", "SODEX_API_KEY"],
+    vars: ["SODEX_BASE_URL"],
   },
   {
-    title: "Wallet Preview",
-    vars: ["NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID", "NEXT_PUBLIC_CHAIN_ID"],
+    title: "Wallet connection",
+    vars: ["NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID"],
   },
   {
-    title: "Wave 3",
-    vars: ["NEXT_PUBLIC_SUPABASE_URL"],
+    title: "App",
+    vars: ["NEXT_PUBLIC_APP_URL", "NEXT_PUBLIC_APP_NAME"],
   },
 ];
 
@@ -70,57 +72,56 @@ const DATA_MODES = [
   {
     label: "Live",
     variant: "live" as const,
-    detail: "The adapter reached a configured external API and normalized usable data.",
+    detail: "The source responded and its data is in use.",
+  },
+  {
+    label: "Stale",
+    variant: "warning" as const,
+    detail: "The latest SoDEX read failed, so the last live snapshot (under 10 minutes old) is shown.",
   },
   {
     label: "Fallback",
     variant: "fallback" as const,
-    detail: "The app attempted live integration or lacked credentials, then returned typed fallback data.",
-  },
-  {
-    label: "Demo",
-    variant: "demo" as const,
-    detail: "The product is using the built-in portfolio and simulation-only workflow.",
+    detail: "The source is down. Its factors use labelled sample data and the dashboard shows a banner.",
   },
 ];
 
 const CURRENT_INTEGRATIONS = [
   {
     label: "SoSoValue",
-    status: "Fallback",
-    variant: "fallback" as const,
+    status: "Live",
+    variant: "live" as const,
     detail:
-      "API access has been requested. Until SOSOVALUE_API_KEY is added, the app uses typed fallback evidence and clearly labels it.",
+      "US BTC/ETH spot ETF flows, news and hot news, and the US macro calendar. Each source is cached separately to stay inside the API quota.",
   },
   {
     label: "SoDEX",
-    status: "Live attempt",
+    status: "Live · mainnet",
     variant: "live" as const,
     detail:
-      "The adapter attempts unsigned public/testnet market reads from documented SoDEX endpoints, then falls back if the gateway is unavailable.",
+      "Mainnet perp and spot tickers, L2 order books and daily klines — prices, depth, slippage and 30-day volatility. Unsigned public reads.",
   },
   {
-    label: "Wallet Preview",
-    status: "Basic holdings",
+    label: "Wallet scanning",
+    status: "4 chains",
     variant: "success" as const,
     detail:
-      "RainbowKit and wagmi connect supported wallets and read native balance plus allowlisted ERC20 balances. Full wallet indexing is not implemented yet.",
+      "Alchemy Portfolio API finds every token on Ethereum, Base, Arbitrum and Optimism; without a key, a curated token list is read over public RPCs.",
   },
   {
     label: "Execution",
-    status: "Simulation only",
-    variant: "demo" as const,
+    status: "Not enabled",
+    variant: "default" as const,
     detail:
-      "No live trade execution is implemented. Testnet order placement waits for safe signing and confirmation plumbing.",
+      "Confirming a plan records a paper hedge. No orders are sent to any exchange.",
   },
 ];
 
 const LIMITATIONS = [
-  "Risk scanning still uses the static demo portfolio for the complete Wave 2 flow.",
-  "Connected wallet mode reads native balance and allowlisted ERC20 balances only.",
-  "Hedge confirmation records simulated orders only.",
-  "Outcome ledger storage is in-memory and resets on server restart.",
-  "Full wallet indexing, EIP-712 signing, and SoDEX testnet order placement are Wave 3 work.",
+  "Outcome ledger entries live in server memory and reset on restart.",
+  "Hedge preferences are saved per browser, not per account.",
+  "News sentiment is keyword-based; SoSoValue does not provide a sentiment score.",
+  "Order placement is not implemented — hedges are recorded as paper hedges.",
 ];
 
 function MethodBadge({ method }: { method: string }) {
@@ -145,7 +146,7 @@ export default function DocsPage() {
               <SectionHeader
                 eyebrow="Documentation"
                 title="API, architecture, and integration reference."
-                subtitle="Convexity Desk is a Next.js full-stack app with server-side adapters, a deterministic risk engine, and an approval-gated simulated hedge flow."
+                subtitle="Convexity Desk is a Next.js full-stack app with server-side adapters, a deterministic risk engine, and and an approval-gated hedge flow."
                 align="left"
               />
               <div className="flex flex-wrap gap-3">
@@ -171,9 +172,9 @@ export default function DocsPage() {
                 {[
                   { label: "Frontend", value: "Next.js App Router, React 19, Tailwind v4" },
                   { label: "Risk", value: "Five-factor deterministic Danger Score" },
-                  { label: "Adapters", value: "SoSoValue and SoDEX live attempts with typed fallback" },
+                  { label: "Adapters", value: "SoSoValue, SoDEX mainnet and Alchemy, cached per source" },
                   { label: "Wallet", value: "RainbowKit/wagmi basic holdings preview" },
-                  { label: "Execution", value: "Wave 2 simulation with human confirmation gate" },
+                  { label: "Execution", value: "Paper hedges behind a human confirmation gate" },
                 ].map(({ label, value }) => (
                   <div key={label} className="flex items-center justify-between gap-4 rounded-lg border border-[#1f2937] bg-[#111827] px-3 py-2.5">
                     <span className="font-mono text-[10px] uppercase tracking-widest text-[#6b7280]">{label}</span>
@@ -197,7 +198,7 @@ export default function DocsPage() {
                     API Routes
                   </p>
                 </div>
-                <Badge variant="demo">10 routes</Badge>
+                <Badge variant="demo">{API_ROUTES.length} routes</Badge>
               </div>
               <div className="divide-y divide-[#1f2937]">
                 {API_ROUTES.map(({ method, route, desc, source }) => (
@@ -220,7 +221,7 @@ export default function DocsPage() {
                 <div className="flex items-center gap-2">
                   <GitBranch className="h-4 w-4 text-[#7cffb2]" />
                   <p className="font-mono text-xs uppercase tracking-widest text-[#9ca3af]">
-                    Demo Pipeline
+                    Scan Pipeline
                   </p>
                 </div>
                 <div className="space-y-3">
@@ -239,7 +240,7 @@ export default function DocsPage() {
                 <div className="flex items-center gap-2">
                   <ShieldAlert className="h-4 w-4 text-[#f59e0b]" />
                   <p className="font-mono text-xs uppercase tracking-widest text-[#f59e0b]">
-                    Wave 2 Limits
+                    Current Limits
                   </p>
                 </div>
                 <div className="space-y-2">
@@ -286,8 +287,8 @@ export default function DocsPage() {
             <div>
               <SectionHeader
                 eyebrow="Data Modes"
-                title="The UI must never pretend fallback data is live."
-                subtitle="Every adapter returns a mode, and the status route combines those modes into demo, mixed, or live app state."
+                title="The UI never presents sample data as live."
+                subtitle="Every adapter returns a mode; the status route combines them into live, partial or offline, and the dashboard banners any source that is down."
                 align="left"
               />
               <div className="mt-8 space-y-3">

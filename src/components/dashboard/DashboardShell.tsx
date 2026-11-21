@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
-import { DemoModeBanner } from "./DemoModeBanner";
+import { DataStatusBanner } from "./DataStatusBanner";
 
 interface DashboardShellProps {
   children: React.ReactNode;
@@ -21,7 +21,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <Topbar onMobileMenuToggle={() => setSidebarOpen((o) => !o)} />
-        <DemoModeBanner />
+        <DataStatusBanner />
         <main className="flex-1 overflow-auto p-4 sm:p-6">{children}</main>
       </div>
     </div>

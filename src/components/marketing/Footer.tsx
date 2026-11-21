@@ -15,7 +15,6 @@ const LINKS = {
     { label: "Docs", href: "/docs" },
     { label: "How It Works", href: "/how-it-works" },
     { label: "About", href: "/about" },
-    { label: "Design System", href: "/design-system" },
   ],
   Ecosystem: [
     { label: "SoSoValue", href: "https://sosovalue.com" },
@@ -23,9 +22,8 @@ const LINKS = {
     { label: "SSI Index", href: "#" },
     { label: "ValueChain", href: "#" },
   ],
-  Buildathon: [
-    { label: "Wave 2", href: "/docs" },
-    { label: "Wave 3 Roadmap", href: "/docs" },
+  Project: [
+    { label: "Methodology", href: "/methodology" },
     { label: "GitHub", href: "https://github.com/AlexD-Great/Convexity-Desk" },
     { label: "Architecture", href: "/docs" },
   ],
@@ -54,8 +52,7 @@ export function Footer() {
               Portfolio protection infrastructure for on-chain finance.
             </p>
             <div className="flex flex-col gap-1.5">
-              <Badge variant="demo" dot>Demo Mode Active</Badge>
-              <Badge variant="primary">Wave 2</Badge>
+              <Badge variant="live" dot>Live market data</Badge>
             </div>
           </div>
 
@@ -91,12 +88,12 @@ export function Footer() {
             </p>
             <span className="text-[#374151]">·</span>
             <p className="font-mono text-xs text-[#4b5563]">
-              Built for SoSoValue Buildathon
+              Data from SoSoValue &amp; SoDEX
             </p>
           </div>
           <p className="max-w-md text-[11px] leading-relaxed text-[#4b5563]">
-            Convexity Desk is a hackathon prototype. It is not financial advice. All hedge plans are for research,
-            simulation, or testnet demonstration unless clearly stated otherwise.
+            Convexity Desk is not financial advice. Hedge plans are analysis only and no orders are placed on
+            your behalf. You are responsible for all trading decisions.
           </p>
         </div>
       </Container>

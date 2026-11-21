@@ -22,13 +22,22 @@ export type ResolvedPortfolio = {
   wallet?: WalletScanMeta;
 };
 
-export async function readScanTarget(request: Request): Promise<{ address?: string }> {
+/** Parses a JSON request body; empty or invalid bodies become {}. */
+export async function readJsonBody(request: Request): Promise<Record<string, unknown>> {
   try {
-    const body = (await request.json()) as { address?: unknown };
-    return typeof body?.address === "string" ? { address: body.address.trim() } : {};
+    const body = await request.json();
+    return body && typeof body === "object" ? (body as Record<string, unknown>) : {};
   } catch {
-    return {}; // empty / non-JSON body → demo
+    return {};
   }
+}
+
+export function scanTargetFrom(body: Record<string, unknown>): { address?: string } {
+  return typeof body.address === "string" && body.address.trim() ? { address: body.address.trim() } : {};
+}
+
+export async function readScanTarget(request: Request): Promise<{ address?: string }> {
+  return scanTargetFrom(await readJsonBody(request));
 }
 
 export async function resolvePortfolio(target: { address?: string }): Promise<ResolvedPortfolio> {

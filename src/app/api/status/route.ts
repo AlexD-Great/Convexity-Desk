@@ -21,8 +21,9 @@ export async function GET() {
     : sosovalueResult.mode === "error" ? "error"
     : "fallback";
 
-  const hasAnyLive = sodexMode === "live" || sosovalueMode === "live";
-  const overallMode: IntegrationStatus["mode"] = hasAnyLive ? "mixed" : "demo";
+  const liveCount = [sodexMode, sosovalueMode].filter((m) => m === "live").length;
+  const overallMode: IntegrationStatus["mode"] =
+    liveCount === 2 ? "live" : liveCount === 1 ? "mixed" : "fallback";
 
   const hasSoSoValueKey = Boolean(process.env.SOSOVALUE_API_KEY?.trim());
   const sosovalueDetail: IntegrationDetail = {

@@ -109,7 +109,7 @@ export function ExecutionPreviewCard({ preview }: ExecutionPreviewCardProps) {
           Warnings &amp; Notices
         </p>
         {preview.warnings.map((w, i) => {
-          const isSimulation = w.toLowerCase().includes("simulat") || w.toLowerCase().includes("wave 2");
+          const isSimulation = /preview only|not financial advice/i.test(w);
           return (
             <div key={i} className="flex items-start gap-2.5">
               {isSimulation ? (

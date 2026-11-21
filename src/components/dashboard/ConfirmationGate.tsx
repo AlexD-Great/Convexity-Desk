@@ -12,7 +12,7 @@ const REQUIRED_CHECKS = [
   },
   {
     id: "cb-sim",
-    label: "I understand this is a Wave 2 demo simulation. No real order will be placed, and no funds are at risk.",
+    label: "I understand this records a paper hedge only. No exchange order will be placed and no funds move.",
   },
   {
     id: "cb-advice",
@@ -74,7 +74,7 @@ export function ConfirmationGate({
           </p>
         </div>
         <Badge variant="demo" className="ml-auto shrink-0">
-          Simulation
+          Paper hedge
         </Badge>
       </div>
 
@@ -134,8 +134,8 @@ export function ConfirmationGate({
 
       {/* Disclaimer */}
       <p className="rounded-lg border border-[#1f2937] bg-[#111827] p-3 text-[11px] leading-relaxed text-[#6b7280]">
-        Convexity Desk is a hackathon prototype. It is not financial advice. All hedge plans are for
-        research, simulation, or testnet demonstration unless clearly stated otherwise.
+        Convexity Desk is not financial advice. Hedge plans are analysis only: no order is placed on
+        any exchange, and you remain responsible for every trading decision.
       </p>
 
       {/* Actions */}

@@ -1,45 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import type { IntegrationStatus } from "@/types";
+import { MODE_COLOR, MODE_LABEL, useIntegrationStatus } from "@/hooks/use-integration-status";
 
 export function ApiStatusBadge() {
-  const [status, setStatus] = useState<IntegrationStatus | null>(null);
-
-  useEffect(() => {
-    fetch("/api/status")
-      .then((r) => r.json())
-      .then(setStatus)
-      .catch(() => null);
-  }, []);
+  const { data: status } = useIntegrationStatus();
 
   if (!status) {
-    return (
-      <span className="h-5 w-16 animate-pulse rounded bg-[#1f2937] font-mono text-xs" />
-    );
+    return <span className="h-5 w-16 animate-pulse rounded bg-[#1f2937] font-mono text-xs" />;
   }
 
-  const modeColor =
-    status.mode === "live"
-      ? "#22c55e"
-      : status.mode === "mixed"
-      ? "#f59e0b"
-      : "#9ca3af";
-
+  const color = MODE_COLOR[status.mode];
   return (
     <div
       className="flex items-center gap-1.5"
-      title={`${status.details.sosovalue.label} ${status.details.sodex.label}`}
+      title={`${status.details.sosovalue.label}\n${status.details.sodex.label}`}
     >
-      <span
-        className="inline-block h-1.5 w-1.5 rounded-full"
-        style={{ backgroundColor: modeColor }}
-      />
-      <span
-        className="font-mono text-[10px] uppercase tracking-wide"
-        style={{ color: modeColor }}
-      >
-        {status.mode}
+      <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ backgroundColor: color }} />
+      <span className="font-mono text-[10px] uppercase tracking-wide" style={{ color }}>
+        Data: {MODE_LABEL[status.mode]}
       </span>
     </div>
   );
