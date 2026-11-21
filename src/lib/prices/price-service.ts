@@ -38,6 +38,13 @@ const ALIASES: Record<string, string> = {
   WSTETH: "ETH",
   WSOSO: "SOSO",
   WSOL: "SOL",
+  // Aave v3 receipt tokens track the underlying 1:1
+  AWETH: "ETH",
+  AETHWETH: "ETH",
+  AWBTC: "BTC",
+  AETHWBTC: "BTC",
+  AUSDC: "USDC",
+  AETHUSDC: "USDC",
 };
 
 const PEGGED = new Set(["USDC"]);
@@ -165,22 +172,42 @@ async function sosovalueQuote(symbol: string): Promise<PriceQuote | null> {
 // Public API
 // ─────────────────────────────────────────────
 
+/**
+ * SoSoValue allows 20 req/min, shared with the ETF/news/macro feeds, so the
+ * fallback is capped per call and can be disabled entirely (wallet scans pass
+ * it only for trusted tokens, never for arbitrary airdropped spam).
+ */
+const MAX_SOSOVALUE_FALLBACKS_PER_CALL = 5;
+
 /** Live quotes keyed by the symbol as requested (upper-cased). */
-export async function getPrices(symbols: string[]): Promise<Record<string, PriceQuote | null>> {
+export async function getPrices(
+  symbols: string[],
+  opts: { sosovalueFallback?: boolean } = {}
+): Promise<Record<string, PriceQuote | null>> {
+  const allowFallback = opts.sosovalueFallback ?? true;
   const wanted = [...new Set(symbols.map((s) => s.trim().toUpperCase()).filter(Boolean))];
   const index = await sodexIndex();
   const out: Record<string, PriceQuote | null> = {};
+  const needFallback: string[] = [];
+
+  for (const requested of wanted) {
+    const sym = canonicalSymbol(requested);
+    if (PEGGED.has(sym)) {
+      out[requested] = { symbol: requested, priceUsd: 1, change24hPct: 0, source: "peg", asOf: new Date().toISOString() };
+      continue;
+    }
+    const hit = index.get(sym);
+    if (hit) out[requested] = { ...hit, symbol: requested };
+    else {
+      out[requested] = null;
+      if (allowFallback) needFallback.push(requested);
+    }
+  }
 
   await Promise.all(
-    wanted.map(async (requested) => {
-      const sym = canonicalSymbol(requested);
-      if (PEGGED.has(sym)) {
-        out[requested] = { symbol: requested, priceUsd: 1, change24hPct: 0, source: "peg", asOf: new Date().toISOString() };
-        return;
-      }
-      const hit = index.get(sym);
-      const quote = hit ?? (await sosovalueQuote(sym));
-      out[requested] = quote ? { ...quote, symbol: requested } : null;
+    needFallback.slice(0, MAX_SOSOVALUE_FALLBACKS_PER_CALL).map(async (requested) => {
+      const quote = await sosovalueQuote(canonicalSymbol(requested));
+      if (quote) out[requested] = { ...quote, symbol: requested };
     })
   );
   return out;

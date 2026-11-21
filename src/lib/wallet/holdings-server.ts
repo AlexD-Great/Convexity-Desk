@@ -268,12 +268,23 @@ export async function getWalletHoldings(address: string): Promise<{ holdings: Ho
     throw new Error(`Could not read the wallet on any chain: ${chains[0].error ?? "unknown error"}`);
   }
 
+  const isTrusted = (b: RawBalance) =>
+    b.tokenAddress === null || provider === "rpc" || isTrustedToken(b.chain, b.tokenAddress);
+
+  // SoDEX covers everything in one cached call. SoSoValue (quota-limited) is
+  // only consulted for trusted tokens SoDEX doesn't list — never for spam.
   const symbols = new Set<string>();
+  const trustedSymbols = new Set<string>();
   for (const b of balances) {
     symbols.add(b.symbol.toUpperCase());
     symbols.add(canonicalSymbol(b.symbol));
+    if (isTrusted(b)) trustedSymbols.add(canonicalSymbol(b.symbol));
   }
-  const quotes = await getPrices([...symbols]);
+  const quotes = await getPrices([...symbols], { sosovalueFallback: false });
+  const unpricedTrusted = [...trustedSymbols].filter((s) => !quotes[s]);
+  if (unpricedTrusted.length > 0) {
+    Object.assign(quotes, await getPrices(unpricedTrusted, { sosovalueFallback: true }));
+  }
 
   const excluded: ExcludedHolding[] = [];
   type Agg = {
@@ -288,8 +299,8 @@ export async function getWalletHoldings(address: string): Promise<{ holdings: Ho
   const agg = new Map<string, Agg>();
 
   for (const b of balances) {
-    const quote = quotes[b.symbol.toUpperCase()] ?? null;
-    const trusted = b.tokenAddress === null || provider === "rpc" || isTrustedToken(b.chain, b.tokenAddress);
+    const quote = quotes[b.symbol.toUpperCase()] ?? quotes[canonicalSymbol(b.symbol)] ?? null;
+    const trusted = isTrusted(b);
 
     let price: number | undefined;
     let source: PriceQuote["source"] | undefined;
