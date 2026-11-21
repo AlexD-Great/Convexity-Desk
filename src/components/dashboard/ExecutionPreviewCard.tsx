@@ -28,7 +28,7 @@ export function ExecutionPreviewCard({ preview }: ExecutionPreviewCardProps) {
     },
     {
       label: "Spread",
-      value: `${preview.spreadBps} bps ${preview.spreadMultiple > 1.5 ? `(${preview.spreadMultiple}× avg)` : ""}`,
+      value: `${preview.spreadBps} bps ${preview.spreadMultiple > 1.5 ? `(${preview.spreadMultiple}× ref)` : ""}`,
     },
     {
       label: "Est. Slippage",

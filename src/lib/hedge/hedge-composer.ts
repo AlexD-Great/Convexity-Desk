@@ -9,7 +9,7 @@
  */
 
 import type { Portfolio, HedgePlan, RiskScan, RiskProfile } from "@/types";
-import type { SoDEXMarketData, SoDEXMarket } from "@/lib/adapters/sodex";
+import { estimateFill, type SoDEXMarketData, type SoDEXMarket } from "@/lib/adapters/sodex";
 
 // ─────────────────────────────────────────────
 // Public types
@@ -171,23 +171,43 @@ function buildExecutionPreview(
   baseAsset: string
 ): ExecutionPreview {
   const market = findMarket(marketData, baseAsset);
-  const fallbackPrice = baseAsset === "BTC" ? 42_824 : baseAsset === "ETH" ? 2_233 : 162;
-
-  const entryPrice = market?.lastPrice ?? fallbackPrice;
-  const bidPrice = market?.bidPrice ?? entryPrice * 0.9997;
-  const askPrice = market?.askPrice ?? entryPrice * 1.0003;
-  const spreadBps = market?.spreadBps ?? 6.5;
-  const slippageBps = Math.round(spreadBps * 1.85); // est. slippage ≈ 1.85× spread
-  const costUsd = (slippageBps / 10_000) * plan.suggestedSizeUsd;
-  const liquidityScore = market?.liquidityScore ?? 45;
-  const spreadMultiple = market?.spreadMultiple ?? 2.3;
-
   const warnings: string[] = [];
-  if (spreadMultiple > 1.5)
-    warnings.push(`SoDEX spread is ${spreadMultiple}× the 30-day average. Consider using a limit order.`);
-  if (liquidityScore < 50)
-    warnings.push(`Liquidity score is ${liquidityScore}/100. Large orders may move the market.`);
-  warnings.push("Wave 2: This is a simulated preview. No real order will be placed.");
+
+  if (!market) {
+    warnings.push(`No SoDEX ${baseAsset} market data available — preview figures are unavailable.`);
+  }
+
+  const side = plan.direction === "long" ? "buy" : "sell";
+  const fill = market ? estimateFill(market, plan.suggestedSizeUsd, side) : null;
+
+  const bidPrice = market?.bidPrice ?? 0;
+  const askPrice = market?.askPrice ?? 0;
+  const spreadBps = market?.spreadBps ?? 0;
+  // Book walk when we have depth; otherwise half-spread + a conservative 2× buffer.
+  const slippageBps = fill ? fill.slippageBps : Math.round(spreadBps * 1.5 * 10) / 10;
+  const entryPrice = fill?.avgPrice ?? market?.lastPrice ?? 0;
+  const costUsd = (slippageBps / 10_000) * plan.suggestedSizeUsd;
+  const liquidityScore = market?.liquidityScore ?? 0;
+  const spreadMultiple = market?.spreadMultiple ?? 0;
+
+  if (market) {
+    if (fill && fill.filled < 1)
+      warnings.push(
+        `Visible SoDEX book only covers ${Math.round(fill.filled * 100)}% of this size within ±2%. Split the order or use limits.`
+      );
+    if (spreadMultiple >= 3)
+      warnings.push(`SoDEX ${market.symbol} spread is ${spreadBps} bps — wider than normal for a major perp. Prefer a limit order.`);
+    if (liquidityScore < 50)
+      warnings.push(`Liquidity score is ${liquidityScore}/100. Large orders may move the market.`);
+    if (Math.abs(market.fundingRate) >= 0.0001)
+      warnings.push(
+        `Funding is ${(market.fundingRate * 100).toFixed(4)}% per interval — ${
+          (market.fundingRate < 0) === (side === "sell") ? "shorts pay" : "shorts receive"
+        } funding while the hedge is open.`
+      );
+    if (marketData.stale) warnings.push("Market data is a recent snapshot — the latest SoDEX read failed.");
+  }
+  warnings.push("Preview only — order placement is not enabled yet. No real order will be placed.");
   warnings.push(
     `Convexity Desk is not financial advice. Confirm only if you understand the hedge intent.`
   );
@@ -197,7 +217,7 @@ function buildExecutionPreview(
     instrument: plan.instrument,
     direction: plan.direction,
     suggestedSizeUsd: plan.suggestedSizeUsd,
-    estimatedEntryPrice: entryPrice,
+    estimatedEntryPrice: Math.round(entryPrice * 100) / 100,
     estimatedSlippageBps: slippageBps,
     estimatedCostUsd: Math.round(costUsd * 100) / 100,
     coveragePercent: plan.coveragePercent,

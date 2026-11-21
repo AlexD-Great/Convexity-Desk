@@ -7,6 +7,12 @@ import { Badge } from "@/components/shared/Badge";
 import { TrendingUp, TrendingDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+function fmtCompactUsd(n: number): string {
+  if (n >= 1e6) return `$${(n / 1e6).toFixed(1)}M`;
+  if (n >= 1e3) return `$${Math.round(n / 1e3)}K`;
+  return `$${Math.round(n)}`;
+}
+
 function StressBar({ score }: { score: number }) {
   const color =
     score >= 70 ? "#ef4444" : score >= 50 ? "#f59e0b" : "#22c55e";
@@ -84,8 +90,12 @@ export function SoDEXMarketPreview() {
             </span>
           </p>
         </div>
-        <Badge variant={modeVariant} dot>
-          {data.mode === "live" ? "Live" : data.mode === "error" ? "Error" : "Fallback"}
+        <Badge variant={data.data.stale ? "fallback" : modeVariant} dot>
+          {data.mode === "live"
+            ? `${data.data.stale ? "Stale" : "Live"} · ${data.data.network}`
+            : data.mode === "error"
+            ? "Error"
+            : "Fallback"}
         </Badge>
       </div>
 
@@ -124,27 +134,31 @@ export function SoDEXMarketPreview() {
               </div>
             </div>
 
-            {/* Right: spread + stress */}
+            {/* Right: spread + depth + stress */}
             <div className="flex flex-col items-end gap-1 shrink-0">
               <p className="font-mono text-[10px] text-[#6b7280]">
                 Spread{" "}
                 <span
                   className={cn(
                     "font-semibold",
-                    market.spreadMultiple >= 2
+                    market.spreadMultiple >= 3
                       ? "text-[#ef4444]"
-                      : market.spreadMultiple >= 1.5
+                      : market.spreadMultiple >= 2
                       ? "text-[#f59e0b]"
                       : "text-[#9ca3af]"
                   )}
                 >
                   {market.spreadBps} bps
                 </span>
-                {market.spreadMultiple > 1.5 && (
-                  <span className="text-[#ef4444]">
-                    {" "}({market.spreadMultiple}× avg)
-                  </span>
-                )}
+                {" · "}Depth ±25bp{" "}
+                <span className="text-[#9ca3af]">
+                  {fmtCompactUsd(Math.min(market.depthBidUsd25bps, market.depthAskUsd25bps))}
+                </span>
+              </p>
+              <p className="font-mono text-[10px] text-[#6b7280]">
+                24h range <span className="text-[#9ca3af]">{market.range24hPct}%</span>
+                {" · "}Funding{" "}
+                <span className="text-[#9ca3af]">{(market.fundingRate * 100).toFixed(4)}%</span>
               </p>
               <StressBar score={market.microstructureStress} />
             </div>
@@ -155,12 +169,12 @@ export function SoDEXMarketPreview() {
       {/* Fallback notice */}
       {data.mode === "fallback" && (
         <p className="text-[10px] text-[#6b7280] font-mono">
-          {data.reason ?? "Fallback data - SoDEX public/testnet market read failed."}
+          {data.reason ?? "SoDEX market read failed — sample data, not live prices."}
         </p>
       )}
-      {data.mode === "live" && data.endpoint && (
+      {data.mode === "live" && (
         <p className="break-all font-mono text-[10px] text-[#6b7280]">
-          Live unsigned public read: {data.endpoint}
+          {data.reason}
         </p>
       )}
     </div>

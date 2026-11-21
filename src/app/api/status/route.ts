@@ -44,16 +44,15 @@ export async function GET() {
     mode: sodexMode,
     label:
       sodexMode === "live"
-        ? "SoDEX: Live public market read"
-        : "SoDEX: Fallback public market data",
+        ? `SoDEX: Live ${sodexResult.data.network} market data${sodexResult.data.stale ? " (stale)" : ""}`
+        : "SoDEX: Fallback sample data",
     reason:
       sodexResult.reason ??
       (sodexMode === "live"
         ? "Unsigned public SoDEX market read succeeded."
-        : "SoDEX public/testnet market read failed; using typed fallback data."),
-    configured: Boolean(
-      process.env.SODEX_BASE_URL?.trim() || process.env.SODEX_TESTNET_BASE_URL?.trim()
-    ),
+        : "SoDEX market read failed; showing sample data."),
+    // Public market data needs no configuration (defaults to mainnet).
+    configured: true,
     endpoint: sodexResult.endpoint,
   };
 

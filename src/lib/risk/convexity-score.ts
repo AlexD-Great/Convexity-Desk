@@ -87,7 +87,8 @@ function factorExplanation(
   score: number,
   portfolio: Portfolio,
   cards: EvidenceCard[],
-  intel: SoSoValueIntelligence
+  intel: SoSoValueIntelligence,
+  market: SoDEXMarketData
 ): string {
   switch (key) {
     case "institutional_flow": {
@@ -133,6 +134,16 @@ function factorExplanation(
       return "Portfolio concentration is within acceptable bounds.";
     }
     case "market_microstructure": {
+      const btc = market.markets.find((m) => m.baseAsset === "BTC") ?? market.markets[0];
+      if (btc && market.network !== "fallback") {
+        const depth = Math.min(btc.depthBidUsd25bps, btc.depthAskUsd25bps);
+        const depthTxt = depth >= 1e6 ? `$${(depth / 1e6).toFixed(1)}M` : `$${Math.round(depth / 1e3)}K`;
+        const tone =
+          score >= 60 ? "Execution conditions are stressed."
+          : score >= 40 ? "Conditions are moderately stressed."
+          : "Conditions are healthy.";
+        return `SoDEX ${btc.symbol}: ${btc.range24hPct}% 24h range, ${btc.spreadBps} bps spread, ${depthTxt} resting within ±25 bps. ${tone}`;
+      }
       if (score >= 60)
         return "SoDEX orderbook spread is widening and liquidity is thinning. Execution conditions are stressed.";
       if (score >= 40)
@@ -214,7 +225,7 @@ export function calculateDangerScore(
     label: FACTOR_LABELS[key],
     score,
     weight,
-    explanation: factorExplanation(key, score, portfolio, cards, intelligence),
+    explanation: factorExplanation(key, score, portfolio, cards, intelligence, marketData),
     evidenceIds: cards
       .filter((c) => {
         if (key === "institutional_flow") return c.category === "ETF Flow";
