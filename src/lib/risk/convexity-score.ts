@@ -14,10 +14,6 @@
 import type { Portfolio, RiskFactor, RiskLevel, RiskScan, EvidenceCard } from "@/types";
 import type { SoSoValueIntelligence } from "@/lib/adapters/sosovalue";
 import type { SoDEXMarketData } from "@/lib/adapters/sodex";
-import {
-  computeNarrativePressure,
-  computeInstitutionalFlowPressure,
-} from "@/lib/data/fallback-evidence";
 
 // ─────────────────────────────────────────────────────────────────────
 // Factor calculators
@@ -64,17 +60,16 @@ function calcMicrostructureStress(market: SoDEXMarketData): number {
   return clamp(avg);
 }
 
-function calcEventProximity(cards: EvidenceCard[]): number {
-  const macroCards = cards.filter((c) => c.category === "Macro");
-  if (macroCards.length === 0) return 25;
-  const high = macroCards.filter((c) => c.severity === "high").length;
-  const med = macroCards.filter((c) => c.severity === "medium").length;
-  return clamp(35 + high * 20 + med * 8);
-}
-
 // ─────────────────────────────────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────────────────────────────────
+
+function fmtUsdShort(n: number): string {
+  const sign = n < 0 ? "−" : "+";
+  const abs = Math.abs(n);
+  if (abs >= 1e9) return `${sign}$${(abs / 1e9).toFixed(2)}B`;
+  return `${sign}$${(abs / 1e6).toFixed(0)}M`;
+}
 
 function clamp(n: number): number {
   return Math.max(0, Math.min(100, Math.round(n)));
@@ -91,10 +86,24 @@ function factorExplanation(
   key: RiskFactor["key"],
   score: number,
   portfolio: Portfolio,
-  cards: EvidenceCard[]
+  cards: EvidenceCard[],
+  intel: SoSoValueIntelligence
 ): string {
   switch (key) {
     case "institutional_flow": {
+      if (intel.etfFlows.length > 0) {
+        const parts = intel.etfFlows.map(
+          (f) =>
+            `${f.symbol} ETFs ${fmtUsdShort(f.netInflow5dUsd)} over 5d (${f.flow5dPctOfAum.toFixed(2)}% of AUM${
+              f.outflowStreakDays >= 2 ? `, ${f.outflowStreakDays}-day outflow streak` : ""
+            })`
+        );
+        const tone =
+          score >= 70 ? "Institutional outflow pressure is elevated."
+          : score >= 40 ? "Institutional positioning is mixed."
+          : "Institutional flows are supportive.";
+        return `${parts.join("; ")}. ${tone}`;
+      }
       const etfBearish = cards.filter(
         (c) => c.category === "ETF Flow" && c.sentiment === "bearish"
       ).length;
@@ -131,6 +140,13 @@ function factorExplanation(
       return "Market microstructure is healthy. Spreads and liquidity are normal.";
     }
     case "event_proximity": {
+      const soon = intel.upcomingEvents.filter((e) => e.impact !== "low" && e.daysAway <= 7);
+      if (soon.length > 0) {
+        const high = soon.filter((e) => e.impact === "high");
+        const lead = high[0] ?? soon[0];
+        const when = lead.daysAway === 0 ? "today" : lead.daysAway === 1 ? "tomorrow" : `in ${lead.daysAway} days`;
+        return `${soon.length} market-moving US macro release${soon.length !== 1 ? "s" : ""} in the next 7 days (${high.length} high-impact). Next key print: ${lead.name} ${when}.`;
+      }
       const macro = cards.filter((c) => c.category === "Macro");
       if (macro.length > 0)
         return `${macro.length} macro event${macro.length !== 1 ? "s" : ""} detected within proximity window. High-impact events increase volatility risk.`;
@@ -161,11 +177,11 @@ export function calculateDangerScore(
 ): RiskScan {
   const cards = intelligence.evidenceCards;
 
-  const instFlow = computeInstitutionalFlowPressure(cards);
-  const narrative = computeNarrativePressure(cards);
+  const instFlow = clamp(intelligence.institutionalFlowScore);
+  const narrative = clamp(intelligence.narrativePressureScore);
   const concentration = calcPortfolioConcentration(portfolio);
   const microstructure = calcMicrostructureStress(marketData);
-  const eventProx = calcEventProximity(cards);
+  const eventProx = clamp(intelligence.eventProximityScore);
 
   const dangerScore = clamp(
     instFlow * 0.3 +
@@ -198,7 +214,7 @@ export function calculateDangerScore(
     label: FACTOR_LABELS[key],
     score,
     weight,
-    explanation: factorExplanation(key, score, portfolio, cards),
+    explanation: factorExplanation(key, score, portfolio, cards, intelligence),
     evidenceIds: cards
       .filter((c) => {
         if (key === "institutional_flow") return c.category === "ETF Flow";
