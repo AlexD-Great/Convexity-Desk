@@ -1,14 +1,13 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import { erc20Abi, formatUnits } from "viem";
 import { useAccount, useBalance, useReadContracts } from "wagmi";
 import { chainLabel } from "@/lib/wallet/chains";
-import {
-  NATIVE_TOKEN_PRICE_FALLBACK_USD,
-  supportedTokensForChain,
-} from "@/lib/wallet/supported-tokens";
-import type { WalletHolding, WalletHoldingsPreview } from "@/lib/wallet/wallet-holdings";
-import { estimateValueUsd } from "@/lib/wallet/wallet-holdings";
+import { supportedTokensForChain } from "@/lib/wallet/supported-tokens";
+import type { WalletHolding, WalletHoldingsPreview, WalletPriceSource } from "@/lib/wallet/wallet-holdings";
+
+type PriceQuote = { priceUsd: number; source: WalletPriceSource } | null;
 
 function numericBalance(value: string): number {
   const parsed = Number(value);
@@ -25,9 +24,24 @@ function formatBalance(value: string): string {
   });
 }
 
+function valueWith(
+  formatted: string,
+  quote: PriceQuote | undefined,
+  isTestnet: boolean
+): Pick<WalletHolding, "estimatedValueUsd" | "priceUsd" | "priceSource"> {
+  if (isTestnet) return { priceSource: "testnet" };
+  if (!quote) return { priceSource: "unavailable" };
+  return {
+    priceUsd: quote.priceUsd,
+    estimatedValueUsd: Math.round(numericBalance(formatted) * quote.priceUsd * 100) / 100,
+    priceSource: quote.source,
+  };
+}
+
 export function useWalletHoldings() {
   const account = useAccount();
   const tokens = supportedTokensForChain(account.chainId);
+  const isTestnet = Boolean(account.chain?.testnet);
 
   const nativeBalance = useBalance({
     address: account.address,
@@ -50,22 +64,35 @@ export function useWalletHoldings() {
     },
   });
 
+  const nativeSymbol = nativeBalance.data?.symbol;
+  const priceSymbols = [nativeSymbol, ...tokens.map((t) => t.symbol)].filter(Boolean) as string[];
+
+  const prices = useQuery({
+    queryKey: ["prices", priceSymbols.join(",")],
+    enabled: account.isConnected && !isTestnet && priceSymbols.length > 0,
+    staleTime: 30_000,
+    refetchInterval: 60_000,
+    queryFn: async () => {
+      const res = await fetch(`/api/prices?symbols=${encodeURIComponent(priceSymbols.join(","))}`);
+      if (!res.ok) throw new Error(`prices HTTP ${res.status}`);
+      const json = (await res.json()) as { prices: Record<string, PriceQuote> };
+      return json.prices;
+    },
+  });
+
+  const quoteFor = (symbol: string) => prices.data?.[symbol.toUpperCase()];
+
   const native: WalletHolding | undefined =
     nativeBalance.data && account.chain
       ? (() => {
           const formatted = formatUnits(nativeBalance.data.value, nativeBalance.data.decimals);
-          const fallbackPrice = NATIVE_TOKEN_PRICE_FALLBACK_USD[account.chainId ?? 0];
           return {
             symbol: nativeBalance.data.symbol,
             name: account.chain?.nativeCurrency.name ?? nativeBalance.data.symbol,
             balance: nativeBalance.data.value.toString(),
             balanceFormatted: formatBalance(formatted),
             decimals: nativeBalance.data.decimals,
-            estimatedValueUsd:
-              fallbackPrice === undefined
-                ? undefined
-                : Math.round(numericBalance(formatted) * fallbackPrice * 100) / 100,
-            priceSource: fallbackPrice === undefined ? "unavailable" : "fallback",
+            ...valueWith(formatted, quoteFor(nativeBalance.data.symbol), isTestnet),
             source: "native",
           };
         })()
@@ -76,7 +103,6 @@ export function useWalletHoldings() {
     const rawResult = result?.status === "success" ? result.result : undefined;
     const rawBalance = typeof rawResult === "bigint" ? rawResult : BigInt(0);
     const formatted = formatUnits(rawBalance, token.decimals);
-    const estimatedValueUsd = estimateValueUsd(numericBalance(formatted), token);
 
     return {
       symbol: token.symbol,
@@ -85,8 +111,7 @@ export function useWalletHoldings() {
       balance: rawBalance.toString(),
       balanceFormatted: formatBalance(formatted),
       decimals: token.decimals,
-      estimatedValueUsd,
-      priceSource: estimatedValueUsd === undefined ? "unavailable" : "fallback",
+      ...valueWith(formatted, quoteFor(token.symbol), isTestnet),
       source: "erc20_allowlist",
     };
   });
@@ -106,18 +131,19 @@ export function useWalletHoldings() {
     totalEstimatedValueUsd,
     mode: account.isConnected ? "basic_holdings_only" : "not_connected",
     limitation:
-      "Wave 2 reads native balance and allowlisted ERC20 balances only. Full wallet portfolio indexing is planned for Wave 3.",
+      "Reads the native balance plus USDC and WETH on Ethereum mainnet only. Broader token coverage is coming next.",
   };
 
   return {
     ...account,
     preview,
     supportedTokens: tokens,
-    isLoading: nativeBalance.isLoading || tokenBalances.isLoading,
-    isError: nativeBalance.isError || tokenBalances.isError,
+    isLoading: nativeBalance.isLoading || tokenBalances.isLoading || prices.isLoading,
+    isError: nativeBalance.isError || tokenBalances.isError || prices.isError,
     refetch: () => {
       void nativeBalance.refetch();
       void tokenBalances.refetch();
+      void prices.refetch();
     },
   };
 }

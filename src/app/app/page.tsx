@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
 import {
   DollarSign,
   Activity,
@@ -9,6 +10,7 @@ import {
   ArrowRight,
   ScanLine,
   Wallet,
+  RefreshCw,
 } from "lucide-react";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { CardShell } from "@/components/shared/CardShell";
@@ -16,48 +18,77 @@ import { Badge } from "@/components/shared/Badge";
 import { PrimaryButton } from "@/components/shared/PrimaryButton";
 import { WalletConnectButton } from "@/components/wallet/WalletConnectButton";
 import { useWalletHoldings } from "@/hooks/use-wallet-holdings";
+import type { HedgePlan, RiskScan } from "@/types";
 
-const METRICS = [
-  {
-    label: "Portfolio Value",
-    value: "$42,850",
-    sublabel: "Demo portfolio · 5 assets",
-    accent: "#f9fafb",
-    icon: DollarSign,
-  },
-  {
-    label: "Danger Score",
-    value: "78 / 100",
-    sublabel: "High Risk — last scan: demo",
-    accent: "#ef4444",
-    icon: Activity,
-  },
-  {
-    label: "Hedge Coverage",
-    value: "22%",
-    sublabel: "Suggested: 42% · Short BTC-PERP",
-    accent: "#f59e0b",
-    icon: ShieldCheck,
-  },
-  {
-    label: "Top Risk Driver",
-    value: "ETF Outflow",
-    sublabel: "Institutional flow pressure 81/100",
-    accent: "#60a5fa",
-    icon: TrendingDown,
-  },
-];
+type GenerateResponse = {
+  scan: RiskScan;
+  hedgePlan: HedgePlan;
+  dataMode: { sosovalue: string; sodex: string };
+};
 
-const RISK_FACTORS = [
-  { label: "Institutional Flow", score: 81, color: "#ef4444" },
-  { label: "Narrative Pressure", score: 74, color: "#ef4444" },
-  { label: "Portfolio Concentration", score: 68, color: "#f59e0b" },
-  { label: "Microstructure Stress", score: 62, color: "#f59e0b" },
-  { label: "Event Proximity", score: 55, color: "#f59e0b" },
-];
+function scoreColor(score: number): string {
+  return score >= 75 ? "#ef4444" : score >= 50 ? "#f59e0b" : score >= 25 ? "#60a5fa" : "#22c55e";
+}
+
+function levelVariant(level: RiskScan["riskLevel"]) {
+  return level === "High Risk" ? "danger" : level === "Elevated" ? "warning" : "primary";
+}
 
 export default function AppOverviewPage() {
   const wallet = useWalletHoldings();
+  const live = useQuery({
+    queryKey: ["overview", "generate"],
+    staleTime: 60_000,
+    refetchInterval: 120_000,
+    queryFn: async () => {
+      const res = await fetch("/api/hedge/generate", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: "{}",
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return (await res.json()) as GenerateResponse;
+    },
+  });
+
+  const scan = live.data?.scan;
+  const plan = live.data?.hedgePlan;
+  const topFactor = scan
+    ? [...scan.factors].sort((a, b) => b.score * b.weight - a.score * a.weight)[0]
+    : undefined;
+  const allLive = live.data && live.data.dataMode.sosovalue === "live" && live.data.dataMode.sodex === "live";
+  const updated = scan ? new Date(scan.createdAt).toLocaleTimeString() : null;
+
+  const metrics = [
+    {
+      label: "Portfolio Value",
+      value: plan?.portfolioValueUsd ? `$${Math.round(plan.portfolioValueUsd).toLocaleString()}` : "—",
+      sublabel: "Demo holdings · live prices",
+      accent: "#f9fafb",
+      icon: DollarSign,
+    },
+    {
+      label: "Danger Score",
+      value: scan ? `${scan.dangerScore} / 100` : "—",
+      sublabel: scan ? `${scan.riskLevel} · updated ${updated}` : "Scanning…",
+      accent: scan ? scoreColor(scan.dangerScore) : "#6b7280",
+      icon: Activity,
+    },
+    {
+      label: "Suggested Hedge",
+      value: plan ? `$${plan.suggestedSizeUsd.toLocaleString()}` : "—",
+      sublabel: plan ? `${plan.direction.toUpperCase()} ${plan.instrument.split("/")[0]} · ${plan.coveragePercent}% coverage` : "",
+      accent: "#f59e0b",
+      icon: ShieldCheck,
+    },
+    {
+      label: "Top Risk Driver",
+      value: topFactor ? topFactor.label.replace(" Pressure", "").replace(" Stress", "") : "—",
+      sublabel: topFactor ? `${topFactor.score}/100 · ${Math.round(topFactor.score * topFactor.weight)} pts of score` : "",
+      accent: "#60a5fa",
+      icon: TrendingDown,
+    },
+  ];
 
   return (
     <div className="space-y-6 max-w-6xl">
@@ -72,7 +103,7 @@ export default function AppOverviewPage() {
             Portfolio Overview
           </h2>
           <p className="mt-1 text-sm text-[#9ca3af]">
-            Demo portfolio · Last scan: not yet run
+            Demo holdings · {updated ? `Live scan at ${updated}` : "Running live scan…"}
           </p>
         </div>
         <PrimaryButton href="/app/scan" size="md">
@@ -81,9 +112,20 @@ export default function AppOverviewPage() {
         </PrimaryButton>
       </div>
 
+      {live.isError && (
+        <CardShell variant="warning" padding="sm">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-sm text-white">Live scan failed to load.</p>
+            <button type="button" onClick={() => live.refetch()} className="flex items-center gap-1.5 text-xs text-[#7cffb2] hover:underline">
+              <RefreshCw className="h-3.5 w-3.5" /> Retry
+            </button>
+          </div>
+        </CardShell>
+      )}
+
       {/* Metric cards */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {METRICS.map((m) => (
+        {metrics.map((m) => (
           <MetricCard key={m.label} {...m} />
         ))}
       </div>
@@ -99,59 +141,73 @@ export default function AppOverviewPage() {
                 Risk Snapshot
               </p>
               <p className="mt-0.5 text-sm font-semibold text-white">
-                Danger Score: <span className="text-[#ef4444]">78 / 100</span>
+                Danger Score:{" "}
+                <span style={{ color: scan ? scoreColor(scan.dangerScore) : "#6b7280" }}>
+                  {scan ? `${scan.dangerScore} / 100` : "—"}
+                </span>
               </p>
             </div>
-            <Badge variant="danger" dot>High Risk</Badge>
+            {scan && <Badge variant={levelVariant(scan.riskLevel)} dot>{scan.riskLevel}</Badge>}
           </div>
 
           <div className="space-y-3">
-            {RISK_FACTORS.map(({ label, score, color }) => (
-              <div key={label} className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <p className="text-xs text-[#9ca3af]">{label}</p>
-                  <p className="font-mono text-xs font-semibold text-white">{score}</p>
-                </div>
-                <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#1f2937]">
-                  <div
-                    className="h-full rounded-full opacity-75"
-                    style={{ width: `${score}%`, backgroundColor: color }}
-                  />
-                </div>
-              </div>
-            ))}
+            {scan
+              ? scan.factors.map(({ key, label, score }) => (
+                  <div key={key} className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs text-[#9ca3af]">{label}</p>
+                      <p className="font-mono text-xs font-semibold text-white">{score}</p>
+                    </div>
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#1f2937]">
+                      <div
+                        className="h-full rounded-full opacity-75 transition-all duration-500"
+                        style={{ width: `${score}%`, backgroundColor: scoreColor(score) }}
+                      />
+                    </div>
+                  </div>
+                ))
+              : [1, 2, 3, 4, 5].map((i) => <div key={i} className="h-6 animate-pulse rounded bg-[#111827]" />)}
           </div>
 
           <Link
             href="/app/scan"
             className="flex items-center gap-1.5 text-xs text-[#7cffb2] hover:text-[#5cefaa] transition-colors"
           >
-            Run full scan for live data
+            See factor evidence
             <ArrowRight className="h-3 w-3" />
           </Link>
         </CardShell>
 
         {/* Action prompt */}
         <div className="space-y-4">
-          {/* Hedge suggestion */}
           <CardShell variant="glow" className="space-y-3">
             <p className="font-mono text-[10px] uppercase tracking-widest text-[#7cffb2]">
               Suggested Action
             </p>
-            <div>
-              <p
-                className="text-base font-bold text-white"
-                style={{ fontFamily: "var(--font-space-grotesk)" }}
-              >
-                Hedge 35% BTC beta exposure
+            {plan && plan.suggestedSizeUsd > 0 ? (
+              <div>
+                <p
+                  className="text-base font-bold text-white"
+                  style={{ fontFamily: "var(--font-space-grotesk)" }}
+                >
+                  {plan.direction === "short" ? "Short" : plan.direction} {plan.instrument.split("/")[0]} · ${plan.suggestedSizeUsd.toLocaleString()}
+                </p>
+                <p className="mt-1 text-xs text-[#9ca3af]">
+                  Covers {plan.coveragePercent}% of BTC+ETH beta exposure
+                </p>
+              </div>
+            ) : (
+              <p className="text-sm text-[#9ca3af]">
+                {plan ? "No hedge suggested at the current Danger Score." : "Computing…"}
               </p>
-              <p className="mt-1 text-xs text-[#9ca3af]">
-                Short BTC-PERP · $12,000 · 42% portfolio coverage
-              </p>
-            </div>
+            )}
             <div className="flex items-center gap-2 flex-wrap">
-              <Badge variant="primary">82% confidence</Badge>
-              <Badge variant="fallback" dot>Fallback data</Badge>
+              {plan && plan.suggestedSizeUsd > 0 && <Badge variant="primary">{plan.confidence}% confidence</Badge>}
+              {live.data && (
+                <Badge variant={allLive ? "live" : "fallback"} dot>
+                  {allLive ? "Live data" : "Partial live data"}
+                </Badge>
+              )}
             </div>
             <Link
               href="/app/hedge"
@@ -198,13 +254,13 @@ export default function AppOverviewPage() {
                   Wallet: {wallet.isConnected ? "Connected" : "Not connected"}
                 </p>
                 <Badge variant={wallet.isConnected ? "primary" : "default"} dot>
-                  {wallet.isConnected ? "Wallet preview available" : "Demo scan"}
+                  {wallet.isConnected ? "Holdings preview available" : "Scanning demo holdings"}
                 </Badge>
               </div>
               <p className="mt-1 text-xs leading-relaxed text-[#9ca3af]">
                 {wallet.isConnected
-                  ? `${wallet.preview.address} on ${wallet.preview.chainName}. Portfolio Mode: Demo Scan / Wallet Preview Available.`
-                  : "Connect a wallet to preview basic native and allowlisted ERC20 holdings. The risk scan remains demo-first in Wave 2."}
+                  ? `${wallet.preview.address} on ${wallet.preview.chainName}. The scan still uses demo holdings until wallet scanning lands.`
+                  : "Connect a browser wallet to preview your holdings at live prices. The scan uses demo holdings for now."}
               </p>
             </div>
           </div>
@@ -212,15 +268,9 @@ export default function AppOverviewPage() {
         </div>
       </CardShell>
 
-      {/* Wave notice */}
-      <CardShell variant="elevated" padding="sm">
-        <p className="text-xs text-[#6b7280]">
-          <span className="text-[#9ca3af] font-medium">Wave 2 demo mode.</span>
-          {" "}The dashboard now supports the full simulated workflow: portfolio, scan, evidence, hedge preview, confirmation, outcome ledger, methodology, docs, and settings.
-          Values on this overview remain static demo summary values.
-        </p>
-      </CardShell>
-
+      <p className="text-[11px] text-[#6b7280]">
+        Data: SoSoValue (ETF flows, news, macro calendar) · SoDEX mainnet (prices, order books). Refreshes every 2 minutes.
+      </p>
     </div>
   );
 }

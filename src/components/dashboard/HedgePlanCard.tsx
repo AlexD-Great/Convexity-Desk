@@ -56,7 +56,9 @@ export function HedgePlanCard({ plan, dangerScore }: HedgePlanCardProps) {
           {
             label: "Size",
             value: `$${plan.suggestedSizeUsd.toLocaleString()}`,
-            sub: `${Math.round((plan.suggestedSizeUsd / 42850) * 100)}% of portfolio`,
+            sub: plan.portfolioValueUsd
+              ? `${Math.round((plan.suggestedSizeUsd / plan.portfolioValueUsd) * 100)}% of portfolio`
+              : "Notional",
             color: "#f9fafb",
           },
           {

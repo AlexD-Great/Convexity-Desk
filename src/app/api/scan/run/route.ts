@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 export async function POST() {
   const [portfolio, intelligenceResult, marketResult] = await Promise.all([
-    Promise.resolve(getDemoPortfolio()),
+    getDemoPortfolio(),
     getSoSoValueIntelligence(),
     getSoDEXMarketData(),
   ]);

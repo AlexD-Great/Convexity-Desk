@@ -254,6 +254,7 @@ export function composeHedgePlan(
     instrument,
     direction: "short",
     suggestedSizeUsd: sizeUsd,
+    portfolioValueUsd: portfolio.totalValueUsd,
     coveragePercent: coverage,
     confidence,
     orderType: "simulation",

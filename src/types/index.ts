@@ -19,6 +19,13 @@ export type PortfolioAsset = {
   riskContribution: number;
   betaBucket: BetaBucket;
   hedgeable: boolean;
+  /** Where priceUsd came from; "unavailable" means value is excluded */
+  priceSource?: "sodex-perp" | "sodex-spot" | "sosovalue" | "peg" | "unavailable";
+  change24hPct?: number;
+  /** Annualised 30-day realised volatility (0.55 = 55%) */
+  volatility30d?: number;
+  /** "realized" from SoDEX klines, or "bucket" default when history is missing */
+  volatilitySource?: "realized" | "bucket";
 };
 
 export type Portfolio = {
@@ -28,6 +35,11 @@ export type Portfolio = {
   totalValueUsd: number;
   assets: PortfolioAsset[];
   updatedAt: string;
+  pricing?: {
+    asOf: string;
+    /** Symbols with no live price (valued at $0) */
+    missing: string[];
+  };
 };
 
 export type RiskFactorKey =
@@ -84,6 +96,8 @@ export type HedgePlan = {
   instrument: string;
   direction: HedgeDirection;
   suggestedSizeUsd: number;
+  /** Portfolio value the plan was sized against */
+  portfolioValueUsd?: number;
   coveragePercent: number;
   confidence: number;
   orderType: OrderType;

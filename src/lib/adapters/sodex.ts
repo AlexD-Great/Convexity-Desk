@@ -103,7 +103,7 @@ async function sodexGet<T>(url: string): Promise<T> {
   return body.data;
 }
 
-type RawTicker = {
+export type RawTicker = {
   symbol: string;
   lastPx: string;
   openPx: string;
@@ -120,6 +120,59 @@ type RawTicker = {
 };
 
 type RawBook = { bids: [string, string][]; asks: [string, string][] };
+
+// ─────────────────────────────────────────────
+// Shared ticker + kline reads (also used by the price service)
+// ─────────────────────────────────────────────
+
+export type SoDEXVenue = "perps" | "spot";
+
+const TICKER_TTL_MS = 30_000;
+const KLINE_TTL_MS = 6 * 60 * 60_000;
+const _tickers = new Map<SoDEXVenue, { data: RawTicker[]; expiresAt: number }>();
+const _tickersInflight = new Map<SoDEXVenue, Promise<RawTicker[]>>();
+const _closes = new Map<string, { data: number[]; expiresAt: number }>();
+
+/** All tickers for a venue (perps: "BTC-USD"; spot: "vBTC_vUSDC"). Cached 30 s. */
+export async function getSoDEXTickers(venue: SoDEXVenue): Promise<RawTicker[]> {
+  const hit = _tickers.get(venue);
+  if (hit && Date.now() < hit.expiresAt) return hit.data;
+  let pending = _tickersInflight.get(venue);
+  if (!pending) {
+    pending = sodexGet<RawTicker[]>(`${marketDataBaseUrl().baseUrl}/${venue}/markets/tickers`);
+    _tickersInflight.set(venue, pending);
+  }
+  try {
+    const data = await pending;
+    _tickers.set(venue, { data, expiresAt: Date.now() + TICKER_TTL_MS });
+    return data;
+  } finally {
+    _tickersInflight.delete(venue);
+  }
+}
+
+/**
+ * Completed daily closes, oldest → newest (today's partial candle dropped).
+ * Cached 6 h.
+ */
+export async function getSoDEXDailyCloses(venueSymbol: string, venue: SoDEXVenue, days = 31): Promise<number[]> {
+  const key = `${venue}:${venueSymbol}:${days}`;
+  const hit = _closes.get(key);
+  if (hit && Date.now() < hit.expiresAt) return hit.data;
+
+  type Kline = { t: number; c: string };
+  const rows = await sodexGet<Kline[]>(
+    `${marketDataBaseUrl().baseUrl}/${venue}/markets/${encodeURIComponent(venueSymbol)}/klines?interval=1d&limit=${days + 1}`
+  );
+  const today = Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), new Date().getUTCDate());
+  const data = rows
+    .filter((k) => k.t < today)
+    .sort((a, b) => a.t - b.t)
+    .map((k) => num(k.c))
+    .filter((c) => c > 0);
+  _closes.set(key, { data, expiresAt: Date.now() + KLINE_TTL_MS });
+  return data;
+}
 
 const num = (v: unknown) => {
   const n = Number(v);
@@ -317,7 +370,7 @@ async function readLive(): Promise<AdapterResponse<SoDEXMarketData>> {
   const { baseUrl, network } = marketDataBaseUrl();
   const perps = `${baseUrl}/perps/markets`;
 
-  const tickers = await sodexGet<RawTicker[]>(`${perps}/tickers`);
+  const tickers = await getSoDEXTickers("perps");
   const wanted = TRACKED.map((b) => tickers.find((t) => t.symbol === `${b}-USD`)).filter(
     (t): t is RawTicker => !!t
   );

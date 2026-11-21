@@ -204,6 +204,27 @@ export function getMacroCalendar() {
   return ssvGet<MacroCalendarDay[]>("/macro/events");
 }
 
+export type CurrencyListItem = { currency_id: string; symbol: string; name: string };
+
+export type CurrencySnapshot = {
+  price: number;
+  /** Fraction, e.g. -0.0587 = −5.87% */
+  change_pct_24h: number;
+  high_24h: number;
+  low_24h: number;
+  marketcap: number;
+  marketcap_rank?: number;
+};
+
+/** Note: returns only the ~20 largest assets; pagination params are ignored. */
+export function getCurrencies() {
+  return ssvGet<CurrencyListItem[]>("/currencies");
+}
+
+export function getCurrencySnapshot(currencyId: string) {
+  return ssvGet<CurrencySnapshot>(`/currencies/${encodeURIComponent(currencyId)}/market-snapshot`);
+}
+
 export function getMacroRates() {
   return ssvGet<MacroRate[]>("/macro/rates");
 }

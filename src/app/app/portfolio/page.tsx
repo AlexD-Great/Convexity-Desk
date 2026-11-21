@@ -15,7 +15,7 @@ import {
   Wallet,
   RefreshCw,
 } from "lucide-react";
-import { getDemoPortfolio } from "@/lib/data/demo-portfolio";
+import { useQuery } from "@tanstack/react-query";
 import { AllocationChart } from "@/components/dashboard/AllocationChart";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { CardShell } from "@/components/shared/CardShell";
@@ -23,8 +23,24 @@ import { Badge } from "@/components/shared/Badge";
 import { PrimaryButton } from "@/components/shared/PrimaryButton";
 import { WalletConnectButton } from "@/components/wallet/WalletConnectButton";
 import { useWalletHoldings } from "@/hooks/use-wallet-holdings";
-import type { BetaBucket } from "@/types";
-import type { WalletHolding } from "@/lib/wallet/wallet-holdings";
+import type { BetaBucket, Portfolio, PortfolioAsset } from "@/types";
+import { PRICE_SOURCE_LABEL, type WalletHolding } from "@/lib/wallet/wallet-holdings";
+
+const ASSET_PRICE_LABEL: Record<NonNullable<PortfolioAsset["priceSource"]>, string> = {
+  "sodex-perp": "SoDEX perp",
+  "sodex-spot": "SoDEX spot",
+  sosovalue: "SoSoValue",
+  peg: "$1 peg",
+  unavailable: "No price",
+};
+
+function fmtPrice(n: number): string {
+  return n < 1 ? n.toFixed(4) : n.toLocaleString(undefined, { maximumFractionDigits: 2 });
+}
+
+function fmtUsd(n: number): string {
+  return `$${n.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+}
 
 const BUCKET_META: Record<BetaBucket, { label: string; color: string }> = {
   BTC_BETA:      { label: "BTC Beta",        color: "#f59e0b" },
@@ -63,7 +79,10 @@ function HoldingRow({ holding }: { holding: WalletHolding }) {
           : `$${holding.estimatedValueUsd.toLocaleString()}`}
       </td>
       <td className="px-4 py-3 font-mono text-[10px] text-[#6b7280]">
-        {holding.priceSource === "fallback" ? "Fallback price" : "No price"}
+        {PRICE_SOURCE_LABEL[holding.priceSource]}
+        {holding.priceUsd !== undefined && holding.priceSource !== "peg" && (
+          <span className="block text-[#9ca3af]">${fmtPrice(holding.priceUsd)}</span>
+        )}
       </td>
     </tr>
   );
@@ -72,13 +91,25 @@ function HoldingRow({ holding }: { holding: WalletHolding }) {
 export default function PortfolioPage() {
   const [mode, setMode] = useState<PortfolioMode>("demo");
   const wallet = useWalletHoldings();
-  const portfolio = getDemoPortfolio();
-  const { assets, totalValueUsd } = portfolio;
+  const demo = useQuery({
+    queryKey: ["portfolio", "demo"],
+    staleTime: 30_000,
+    refetchInterval: 60_000,
+    queryFn: async () => {
+      const res = await fetch("/api/portfolio/demo");
+      if (!res.ok) throw new Error(`portfolio HTTP ${res.status}`);
+      return (await res.json()) as Portfolio;
+    },
+  });
+  const portfolio = demo.data;
+  const assets = portfolio?.assets ?? [];
+  const totalValueUsd = portfolio?.totalValueUsd ?? 0;
+  const missingPrices = portfolio?.pricing?.missing ?? [];
 
   const buckets = BUCKET_ORDER.map((bucket) => {
     const bucketAssets = assets.filter((a) => a.betaBucket === bucket);
-    const value = bucketAssets.reduce((s, a) => s + a.valueUsd, 0);
-    const weight = Math.round((value / totalValueUsd) * 1000) / 10;
+    const value = Math.round(bucketAssets.reduce((s, a) => s + a.valueUsd, 0));
+    const weight = totalValueUsd > 0 ? Math.round((value / totalValueUsd) * 1000) / 10 : 0;
     return { bucket, value, weight, meta: BUCKET_META[bucket] };
   });
 
@@ -86,9 +117,9 @@ export default function PortfolioPage() {
   const highBetaWeight = assets
     .filter((a) => a.betaBucket === "HIGH_BETA_ALT")
     .reduce((s, a) => s + a.weight, 0);
-  const hedgeableValue = assets
-    .filter((a) => a.hedgeable)
-    .reduce((s, a) => s + a.valueUsd, 0);
+  const hedgeableValue = Math.round(
+    assets.filter((a) => a.hedgeable).reduce((s, a) => s + a.valueUsd, 0)
+  );
 
   const walletHoldings = [
     ...(wallet.preview.native ? [wallet.preview.native] : []),
@@ -135,7 +166,7 @@ export default function PortfolioPage() {
           </button>
         ))}
         <Badge variant={mode === "wallet" ? "primary" : "demo"} dot>
-          {mode === "wallet" ? "Wallet Preview" : "Demo Data"}
+          {mode === "wallet" ? "Wallet Preview" : "Demo holdings · live prices"}
         </Badge>
         {mode === "wallet" && <Badge variant="fallback">Basic holdings only</Badge>}
       </div>
@@ -197,7 +228,7 @@ export default function PortfolioPage() {
                         ? "Partial"
                         : `$${wallet.preview.totalEstimatedValueUsd.toLocaleString()}`
                     }
-                    sublabel="Fallback prices where available"
+                    sublabel="Live SoDEX prices"
                     accent="#f59e0b"
                     icon={DollarSign}
                   />
@@ -246,8 +277,33 @@ export default function PortfolioPage() {
             </>
           )}
         </div>
+      ) : !portfolio ? (
+        demo.isError ? (
+          <CardShell variant="warning" padding="sm">
+            <p className="text-sm text-white">Could not load live portfolio prices.</p>
+            <button type="button" onClick={() => demo.refetch()} className="mt-2 text-xs text-[#7cffb2] hover:underline">
+              Retry
+            </button>
+          </CardShell>
+        ) : (
+          <div className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="h-24 animate-pulse rounded-xl bg-[#111827]" />
+              ))}
+            </div>
+            <div className="h-64 animate-pulse rounded-xl bg-[#111827]" />
+          </div>
+        )
       ) : (
         <>
+          {missingPrices.length > 0 && (
+            <CardShell variant="warning" padding="sm">
+              <p className="text-xs text-[#9ca3af]">
+                No live price for {missingPrices.join(", ")} — valued at $0 and excluded from weights.
+              </p>
+            </CardShell>
+          )}
           {btcWeight > 40 && (
             <CardShell variant="warning" padding="sm">
               <div className="flex items-start gap-3">
@@ -269,9 +325,9 @@ export default function PortfolioPage() {
           )}
 
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <MetricCard label="Total Value" value={`$${totalValueUsd.toLocaleString()}`} sublabel={`${assets.length} assets`} accent="#f9fafb" icon={DollarSign} />
-            <MetricCard label="Largest Position" value={`BTC - ${btcWeight}%`} sublabel={`$${assets.find((a) => a.symbol === "BTC")?.valueUsd.toLocaleString()}`} accent="#f59e0b" icon={BarChart3} />
-            <MetricCard label="Hedgeable Exposure" value={`$${hedgeableValue.toLocaleString()}`} sublabel={`${Math.round((hedgeableValue / totalValueUsd) * 100)}% of portfolio`} accent="#7cffb2" icon={ShieldCheck} />
+            <MetricCard label="Total Value" value={fmtUsd(totalValueUsd)} sublabel={`${assets.length} assets · live prices`} accent="#f9fafb" icon={DollarSign} />
+            <MetricCard label="Largest Position" value={assets[0] ? `${assets[0].symbol} - ${assets[0].weight}%` : "-"} sublabel={assets[0] ? fmtUsd(assets[0].valueUsd) : ""} accent="#f59e0b" icon={BarChart3} />
+            <MetricCard label="Hedgeable Exposure" value={fmtUsd(hedgeableValue)} sublabel={`${totalValueUsd > 0 ? Math.round((hedgeableValue / totalValueUsd) * 100) : 0}% of portfolio`} accent="#7cffb2" icon={ShieldCheck} />
             <MetricCard label="High Beta Exposure" value={`${Math.round(highBetaWeight + btcWeight)}%`} sublabel="BTC Beta + High Beta Alts" accent={highBetaWeight + btcWeight > 50 ? "#ef4444" : "#f59e0b"} icon={Layers} />
           </div>
 
@@ -281,7 +337,7 @@ export default function PortfolioPage() {
                 <p className="font-mono text-[10px] uppercase tracking-widest text-[#6b7280]">
                   Allocation
                 </p>
-                <Badge variant="demo" dot>Demo Data</Badge>
+                <Badge variant="demo" dot>Demo holdings</Badge>
               </div>
               <AllocationChart assets={assets} />
             </CardShell>
@@ -300,7 +356,7 @@ export default function PortfolioPage() {
                         {bucket === "BTC_BETA" && weight > 40 && <Badge variant="warning">Above threshold</Badge>}
                       </div>
                       <div className="flex items-center gap-3 text-right">
-                        <span className="font-mono text-xs text-[#6b7280]">{value > 0 ? `$${value.toLocaleString()}` : "-"}</span>
+                        <span className="font-mono text-xs text-[#6b7280]">{value > 0 ? fmtUsd(value) : "-"}</span>
                         <span className="w-10 font-mono text-xs font-semibold text-white">{weight > 0 ? `${weight}%` : "0%"}</span>
                       </div>
                     </div>
@@ -321,7 +377,7 @@ export default function PortfolioPage() {
               <p className="font-mono text-[10px] uppercase tracking-widest text-[#6b7280]">
                 Assets ({assets.length})
               </p>
-              <Badge variant="demo" dot>Demo Portfolio</Badge>
+              <Badge variant="demo" dot>Demo holdings · live prices</Badge>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -347,8 +403,18 @@ export default function PortfolioPage() {
                           </div>
                         </td>
                         <td className="px-4 py-3 font-mono text-xs text-[#9ca3af]">{asset.amount.toLocaleString()}</td>
-                        <td className="px-4 py-3 font-mono text-xs text-[#9ca3af]">${asset.priceUsd.toLocaleString()}</td>
-                        <td className="px-4 py-3 font-mono text-xs font-semibold text-white">${asset.valueUsd.toLocaleString()}</td>
+                        <td className="px-4 py-3 font-mono text-xs text-[#9ca3af]">
+                          {asset.priceSource === "unavailable" ? "—" : `$${fmtPrice(asset.priceUsd)}`}
+                          {asset.change24hPct !== undefined && asset.priceSource !== "peg" && (
+                            <span className={asset.change24hPct >= 0 ? "ml-1.5 text-[#22c55e]" : "ml-1.5 text-[#ef4444]"}>
+                              {asset.change24hPct >= 0 ? "+" : ""}{asset.change24hPct}%
+                            </span>
+                          )}
+                          <span className="block text-[10px] text-[#6b7280]">
+                            {ASSET_PRICE_LABEL[asset.priceSource ?? "unavailable"]}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 font-mono text-xs font-semibold text-white">{fmtUsd(asset.valueUsd)}</td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
                             <div className="h-1 w-16 overflow-hidden rounded-full bg-[#1f2937]">
@@ -359,6 +425,14 @@ export default function PortfolioPage() {
                         </td>
                         <td className="px-4 py-3">
                           <span className="font-mono text-xs" style={{ color: asset.riskContribution > 20 ? "#ef4444" : asset.riskContribution > 10 ? "#f59e0b" : "#22c55e" }}>{asset.riskContribution}%</span>
+                          {asset.volatility30d !== undefined && asset.betaBucket !== "STABLE" && (
+                            <span
+                              className="block font-mono text-[10px] text-[#6b7280]"
+                              title={asset.volatilitySource === "realized" ? "30-day realised volatility from SoDEX daily closes" : "No price history — bucket default volatility"}
+                            >
+                              σ {Math.round(asset.volatility30d * 100)}%{asset.volatilitySource === "bucket" ? " (est.)" : ""}
+                            </span>
+                          )}
                         </td>
                         <td className="px-4 py-3">
                           <span className="whitespace-nowrap rounded-full border px-2 py-0.5 font-mono text-[10px] tracking-wide" style={{ borderColor: `${color}30`, color, backgroundColor: `${color}10` }}>
