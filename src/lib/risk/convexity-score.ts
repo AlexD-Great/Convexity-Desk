@@ -19,33 +19,33 @@ import type { SoDEXMarketData } from "@/lib/adapters/sodex";
 // Factor calculators
 // ─────────────────────────────────────────────────────────────────────
 
+/**
+ * Portfolio concentration (0–100), asset-agnostic:
+ *   20 base
+ *   + 1.3 × (largest risky position % − 25)      single-asset risk
+ *   + 0.5 × (high-beta alt % − 10), max 20       alt amplification
+ *   + 0.5 × (total risky % − 70),   max 15       little stablecoin cushion
+ * "Risky" = everything except stablecoins.
+ */
+function largestRisky(portfolio: Portfolio) {
+  return [...portfolio.assets]
+    .filter((a) => a.betaBucket !== "STABLE")
+    .sort((a, b) => b.weight - a.weight)[0];
+}
+
 function calcPortfolioConcentration(portfolio: Portfolio): number {
-  let score = 25; // base
-
-  for (const asset of portfolio.assets) {
-    if (asset.betaBucket === "BTC_BETA") {
-      if (asset.weight > 40) score += Math.min(45, (asset.weight - 40) * 9);
-      else if (asset.weight > 30) score += Math.min(20, (asset.weight - 30) * 4);
-    } else if (asset.betaBucket === "ETH_BETA") {
-      if (asset.weight > 35) score += Math.min(15, (asset.weight - 35) * 3);
-    } else if (asset.betaBucket === "HIGH_BETA_ALT") {
-      if (asset.weight > 10)
-        score += Math.min(12, (asset.weight - 10) * 1.2);
-    } else if (asset.betaBucket === "STABLE") {
-      if (asset.weight > 25) score -= Math.min(10, (asset.weight - 25) * 1);
-    }
-  }
-
-  // Penalise high combined high-beta exposure
-  const highBetaTotal = portfolio.assets
-    .filter((a) =>
-      (["BTC_BETA", "ETH_BETA", "HIGH_BETA_ALT"] as const).includes(a.betaBucket as never)
-    )
+  const top = largestRisky(portfolio);
+  const altW = portfolio.assets
+    .filter((a) => a.betaBucket === "HIGH_BETA_ALT")
     .reduce((s, a) => s + a.weight, 0);
-  if (highBetaTotal > 70)
-    score += Math.min(15, (highBetaTotal - 70) * 1.5);
+  const riskyW = portfolio.assets
+    .filter((a) => a.betaBucket !== "STABLE")
+    .reduce((s, a) => s + a.weight, 0);
 
-  return clamp(score);
+  const single = Math.max(0, (top?.weight ?? 0) - 25) * 1.3;
+  const alts = Math.min(20, Math.max(0, altW - 10) * 0.5);
+  const cushion = Math.min(15, Math.max(0, riskyW - 70) * 0.5);
+  return clamp(20 + single + alts + cushion);
 }
 
 function calcMicrostructureStress(market: SoDEXMarketData): number {
@@ -123,15 +123,18 @@ function factorExplanation(
       return "Narrative signals are neutral or positive.";
     }
     case "portfolio_concentration": {
-      const btcW = portfolio.assets.find((a) => a.symbol === "BTC")?.weight ?? 0;
-      if (btcW > 40)
-        return `BTC allocation at ${btcW}% exceeds the 40% concentration threshold. Single-asset risk is elevated.`;
+      const top = largestRisky(portfolio);
+      const stableW = portfolio.assets
+        .filter((a) => a.betaBucket === "STABLE")
+        .reduce((s, a) => s + a.weight, 0);
       const highBeta = portfolio.assets
         .filter((a) => a.betaBucket === "HIGH_BETA_ALT")
         .reduce((s, a) => s + a.weight, 0);
+      if (top && top.weight > 40)
+        return `${top.symbol} is ${top.weight}% of the portfolio — above the 40% single-asset threshold. A move in ${top.symbol} drives most of your P&L.`;
       if (highBeta > 25)
         return `High-beta alt exposure at ${highBeta.toFixed(1)}% adds downside amplification risk.`;
-      return "Portfolio concentration is within acceptable bounds.";
+      return `Largest risky position is ${top ? `${top.symbol} at ${top.weight}%` : "none"}, with ${stableW.toFixed(0)}% in stablecoins. Concentration is within acceptable bounds.`;
     }
     case "market_microstructure": {
       const btc = market.markets.find((m) => m.baseAsset === "BTC") ?? market.markets[0];
@@ -166,12 +169,18 @@ function factorExplanation(
   }
 }
 
-function buildSummary(score: number, level: RiskLevel, portfolio: Portfolio): string {
-  const btcW = portfolio.assets.find((a) => a.symbol === "BTC")?.weight ?? 0;
+function buildSummary(score: number, level: RiskLevel, portfolio: Portfolio, factors: RiskFactor[]): string {
+  const drivers = [...factors]
+    .sort((a, b) => b.score * b.weight - a.score * a.weight)
+    .slice(0, 2)
+    .map((f) => `${f.label.toLowerCase()} (${f.score})`)
+    .join(" and ");
+  const top = largestRisky(portfolio);
+  const hedgeTarget = top?.betaBucket === "ETH_BETA" ? "ETH" : "BTC";
   if (score >= 75)
-    return `Your portfolio is at ${level.toUpperCase()} with a Danger Score of ${score}/100. BTC allocation (${btcW}%) is above the safe threshold, institutional flow pressure is elevated, and market microstructure shows stress. Consider hedging BTC beta exposure before conditions deteriorate further.`;
+    return `Your portfolio is at ${level.toUpperCase()} with a Danger Score of ${score}/100, driven mainly by ${drivers}. Consider hedging ${hedgeTarget} beta exposure before conditions deteriorate further.`;
   if (score >= 50)
-    return `Your portfolio is at ${level.toUpperCase()} with a Danger Score of ${score}/100. Risk is building across multiple factors. Monitor closely and consider a partial hedge.`;
+    return `Your portfolio is at ${level.toUpperCase()} with a Danger Score of ${score}/100. The biggest contributors are ${drivers}. Monitor closely and consider a partial hedge.`;
   if (score >= 25)
     return `Your portfolio is in ${level.toUpperCase()} territory (${score}/100). Risk is present but manageable. No immediate hedge is required.`;
   return `Your portfolio is at ${level.toUpperCase()} (${score}/100). Current conditions are benign.`;
@@ -242,7 +251,7 @@ export function calculateDangerScore(
     dangerScore,
     riskLevel: level,
     factors,
-    summary: buildSummary(dangerScore, level, portfolio),
+    summary: buildSummary(dangerScore, level, portfolio, factors),
     createdAt: new Date().toISOString(),
   };
 }

@@ -20,7 +20,9 @@ export type PortfolioAsset = {
   betaBucket: BetaBucket;
   hedgeable: boolean;
   /** Where priceUsd came from; "unavailable" means value is excluded */
-  priceSource?: "sodex-perp" | "sodex-spot" | "sosovalue" | "peg" | "unavailable";
+  priceSource?: "sodex-perp" | "sodex-spot" | "sosovalue" | "peg" | "alchemy" | "unavailable";
+  /** Chains this position was found on (wallet portfolios) */
+  chains?: string[];
   change24hPct?: number;
   /** Annualised 30-day realised volatility (0.55 = 55%) */
   volatility30d?: number;

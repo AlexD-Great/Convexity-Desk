@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { ShieldCheck, ArrowRight, RefreshCw, Loader2, CheckCircle2 } from "lucide-react";
@@ -14,11 +13,14 @@ import { ConfirmationGate } from "@/components/dashboard/ConfirmationGate";
 import { CardShell } from "@/components/shared/CardShell";
 import { Badge } from "@/components/shared/Badge";
 import { PrimaryButton } from "@/components/shared/PrimaryButton";
+import { PortfolioSourceToggle } from "@/components/dashboard/PortfolioSourceToggle";
+import { usePortfolioSource } from "@/hooks/use-portfolio-source";
 
 type PageState = "idle" | "generating" | "done" | "gate" | "confirmed" | "error";
 
 type GenerateResponse = {
   scan: RiskScan;
+  portfolioSource?: "demo" | "wallet";
   hedgePlan: HedgePlan;
   executionPreview: ExecutionPreview;
   dataMode: { sosovalue: string; sodex: string };
@@ -30,7 +32,7 @@ type GenerateResponse = {
 
 // ─── Idle ─────────────────────────────────────────────────────────────
 
-function IdleState({ onGenerate }: { onGenerate: () => void }) {
+function IdleState({ onGenerate, sourceLabel }: { onGenerate: () => void; sourceLabel: string }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
@@ -62,7 +64,7 @@ function IdleState({ onGenerate }: { onGenerate: () => void }) {
         </Link>
       </div>
       <p className="font-mono text-[10px] text-[#4b5563]">
-        Demo portfolio · Balanced risk profile · Simulation mode
+        {sourceLabel} · Balanced risk profile · Preview only
       </p>
     </motion.div>
   );
@@ -70,7 +72,7 @@ function IdleState({ onGenerate }: { onGenerate: () => void }) {
 
 // ─── Generating ───────────────────────────────────────────────────────
 
-function GeneratingState() {
+function GeneratingState({ sourceLabel }: { sourceLabel: string }) {
   return (
     <div className="flex flex-col items-center justify-center gap-8 py-20 text-center">
       <Loader2 className="h-10 w-10 animate-spin text-[#7cffb2]" />
@@ -78,7 +80,7 @@ function GeneratingState() {
         <p className="text-base font-semibold text-white" style={{ fontFamily: "var(--font-space-grotesk)" }}>
           Composing hedge plan…
         </p>
-        {["Running risk scan on demo portfolio…",
+        {[`Running risk scan on ${sourceLabel.toLowerCase()}…`,
           "Sizing hedge position…",
           "Fetching SoDEX execution preview…",
           "Building risk warnings…",
@@ -157,7 +159,8 @@ function ResultsState({
             Hedge Plan Ready
           </h2>
           <p className="mt-1 text-sm text-[#9ca3af]">
-            Danger Score {scan.dangerScore}/100 · {scan.riskLevel} · Demo portfolio
+            Danger Score {scan.dangerScore}/100 · {scan.riskLevel} ·{" "}
+            {result.portfolioSource === "wallet" ? "Your wallet" : "Demo holdings"}
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
@@ -257,22 +260,29 @@ function ResultsState({
 // ─── Page ─────────────────────────────────────────────────────────────
 
 export default function HedgePage() {
-  const router = useRouter();
   const [state, setState] = useState<PageState>("idle");
   const [result, setResult] = useState<GenerateResponse | null>(null);
   const [showGate, setShowGate] = useState(false);
   const [confirmedOrderId, setConfirmedOrderId] = useState<string>("");
+  const [error, setError] = useState<string | null>(null);
+  const target = usePortfolioSource();
 
   const generate = async () => {
     setState("generating");
     setShowGate(false);
+    setError(null);
     try {
-      const res = await fetch("/api/hedge/generate", { method: "POST" });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json() as GenerateResponse;
-      setResult(data);
+      const res = await fetch("/api/hedge/generate", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: target.requestBody,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? `HTTP ${res.status}`);
+      setResult(data as GenerateResponse);
       setState("done");
-    } catch {
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
       setState("error");
     }
   };
@@ -307,12 +317,15 @@ export default function HedgePage() {
       <AnimatePresence mode="wait">
         {state === "idle" && (
           <motion.div key="idle" exit={{ opacity: 0 }}>
-            <IdleState onGenerate={generate} />
+            <div className="mb-2 flex justify-center">
+              <PortfolioSourceToggle />
+            </div>
+            <IdleState onGenerate={generate} sourceLabel={target.label} />
           </motion.div>
         )}
         {state === "generating" && (
           <motion.div key="generating" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <GeneratingState />
+            <GeneratingState sourceLabel={target.label} />
           </motion.div>
         )}
         {state === "done" && result && (
@@ -335,7 +348,7 @@ export default function HedgePage() {
           <motion.div key="error" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             <CardShell variant="danger" className="flex flex-col items-center gap-4 py-16 text-center">
               <p className="text-sm font-semibold text-white">Failed to generate hedge plan</p>
-              <p className="text-xs text-[#9ca3af]">Check the browser console for details.</p>
+              <p className="max-w-md text-xs text-[#9ca3af]">{error ?? "Could not reach the hedge API."}</p>
               <button
                 onClick={generate}
                 className="flex items-center gap-2 rounded-lg border border-[#1f2937] px-4 py-2 text-sm text-[#9ca3af] hover:text-white hover:bg-[#1f2937] transition-colors"

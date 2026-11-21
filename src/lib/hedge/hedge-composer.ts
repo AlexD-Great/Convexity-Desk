@@ -75,17 +75,29 @@ function dangerMultiplier(score: number): number {
   return 0.10 + ((score - 50) / 50) * 0.35;
 }
 
+/** Rounding step that scales with size: $10 under $1k … $1k above $100k. */
+function roundStep(usd: number): number {
+  if (usd < 1_000) return 10;
+  if (usd < 10_000) return 50;
+  if (usd < 100_000) return 100;
+  return 1_000;
+}
+
 function hedgeSize(
   portfolio: Portfolio,
   dangerScore: number,
   profile: RiskProfile = "balanced"
 ): number {
-  const raw =
-    portfolio.totalValueUsd *
-    dangerMultiplier(dangerScore) *
-    PROFILE_MULTIPLIER[profile];
-  // Round to nearest $1 000
-  return Math.round(raw / 1000) * 1000;
+  // Size against risky exposure only — stablecoins carry no market beta.
+  const riskyUsd = portfolio.assets
+    .filter((a) => a.betaBucket !== "STABLE")
+    .reduce((s, a) => s + a.valueUsd, 0);
+  const raw = Math.min(
+    riskyUsd,
+    riskyUsd * dangerMultiplier(dangerScore) * PROFILE_MULTIPLIER[profile]
+  );
+  const step = roundStep(raw);
+  return Math.round(raw / step) * step;
 }
 
 // ─────────────────────────────────────────────
@@ -127,11 +139,20 @@ function buildRationale(
   instrument: string,
   baseAsset: string
 ): string {
-  const btcW = portfolio.assets.find((a) => a.betaBucket === "BTC_BETA")?.weight ?? 0;
+  const bucket = baseAsset === "ETH" ? "ETH_BETA" : "BTC_BETA";
+  const directW = portfolio.assets
+    .filter((a) => a.betaBucket === bucket)
+    .reduce((s, a) => s + a.weight, 0);
+  const altW = portfolio.assets
+    .filter((a) => a.betaBucket === "HIGH_BETA_ALT")
+    .reduce((s, a) => s + a.weight, 0);
+  const exposure =
+    directW > 0
+      ? `${baseAsset} exposure at ${directW.toFixed(1)}% of the portfolio`
+      : `high-beta alt exposure at ${altW.toFixed(1)}% (hedged with ${baseAsset} as a proxy)`;
   return (
-    `Danger Score of ${dangerScore}/100 with ${baseAsset} allocation at ${btcW}% ` +
-    `exceeds the safe concentration threshold. A short ${instrument} position reduces ` +
-    `portfolio beta exposure and provides downside protection without requiring a full exit.`
+    `Danger Score of ${dangerScore}/100 with ${exposure}. A short ${instrument} position ` +
+    `reduces portfolio beta and provides downside protection without requiring a full exit.`
   );
 }
 

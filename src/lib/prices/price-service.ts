@@ -13,7 +13,8 @@
 import { getSoDEXDailyCloses, getSoDEXTickers, type RawTicker, type SoDEXVenue } from "@/lib/adapters/sodex";
 import { getCurrencies, getCurrencySnapshot, getSoSoValueConfig } from "@/lib/adapters/sosovalue-client";
 
-export type PriceSource = "sodex-perp" | "sodex-spot" | "sosovalue" | "peg";
+/** "alchemy" is only assigned by the wallet reader, never by getPrices(). */
+export type PriceSource = "sodex-perp" | "sodex-spot" | "sosovalue" | "peg" | "alchemy";
 
 export type PriceQuote = {
   symbol: string;

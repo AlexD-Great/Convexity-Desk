@@ -18,6 +18,8 @@ import { Badge } from "@/components/shared/Badge";
 import { PrimaryButton } from "@/components/shared/PrimaryButton";
 import { WalletConnectButton } from "@/components/wallet/WalletConnectButton";
 import { useWalletHoldings } from "@/hooks/use-wallet-holdings";
+import { usePortfolioSource } from "@/hooks/use-portfolio-source";
+import { PortfolioSourceToggle } from "@/components/dashboard/PortfolioSourceToggle";
 import type { HedgePlan, RiskScan } from "@/types";
 
 type GenerateResponse = {
@@ -36,18 +38,21 @@ function levelVariant(level: RiskScan["riskLevel"]) {
 
 export default function AppOverviewPage() {
   const wallet = useWalletHoldings();
+  const target = usePortfolioSource();
   const live = useQuery({
-    queryKey: ["overview", "generate"],
+    queryKey: ["overview", "generate", target.source, target.address ?? ""],
     staleTime: 60_000,
     refetchInterval: 120_000,
+    retry: 1,
     queryFn: async () => {
       const res = await fetch("/api/hedge/generate", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: "{}",
+        body: target.requestBody,
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return (await res.json()) as GenerateResponse;
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? `HTTP ${res.status}`);
+      return json as GenerateResponse;
     },
   });
 
@@ -63,7 +68,7 @@ export default function AppOverviewPage() {
     {
       label: "Portfolio Value",
       value: plan?.portfolioValueUsd ? `$${Math.round(plan.portfolioValueUsd).toLocaleString()}` : "—",
-      sublabel: "Demo holdings · live prices",
+      sublabel: `${target.label} · live prices`,
       accent: "#f9fafb",
       icon: DollarSign,
     },
@@ -103,8 +108,11 @@ export default function AppOverviewPage() {
             Portfolio Overview
           </h2>
           <p className="mt-1 text-sm text-[#9ca3af]">
-            Demo holdings · {updated ? `Live scan at ${updated}` : "Running live scan…"}
+            {target.label} · {updated ? `Live scan at ${updated}` : "Running live scan…"}
           </p>
+          <div className="mt-3">
+            <PortfolioSourceToggle showConnect={false} />
+          </div>
         </div>
         <PrimaryButton href="/app/scan" size="md">
           <ScanLine className="h-4 w-4" />
@@ -115,7 +123,10 @@ export default function AppOverviewPage() {
       {live.isError && (
         <CardShell variant="warning" padding="sm">
           <div className="flex items-center justify-between gap-3">
-            <p className="text-sm text-white">Live scan failed to load.</p>
+            <div>
+              <p className="text-sm text-white">Live scan failed to load.</p>
+              <p className="mt-0.5 text-xs text-[#9ca3af]">{(live.error as Error)?.message}</p>
+            </div>
             <button type="button" onClick={() => live.refetch()} className="flex items-center gap-1.5 text-xs text-[#7cffb2] hover:underline">
               <RefreshCw className="h-3.5 w-3.5" /> Retry
             </button>
@@ -253,14 +264,14 @@ export default function AppOverviewPage() {
                 <p className="text-sm font-semibold text-white">
                   Wallet: {wallet.isConnected ? "Connected" : "Not connected"}
                 </p>
-                <Badge variant={wallet.isConnected ? "primary" : "default"} dot>
-                  {wallet.isConnected ? "Holdings preview available" : "Scanning demo holdings"}
+                <Badge variant={target.source === "wallet" ? "primary" : "default"} dot>
+                  {target.source === "wallet" ? "Scanning your wallet" : "Scanning demo holdings"}
                 </Badge>
               </div>
               <p className="mt-1 text-xs leading-relaxed text-[#9ca3af]">
                 {wallet.isConnected
-                  ? `${wallet.preview.address} on ${wallet.preview.chainName}. The scan still uses demo holdings until wallet scanning lands.`
-                  : "Connect a browser wallet to preview your holdings at live prices. The scan uses demo holdings for now."}
+                  ? `${wallet.preview.address}. Holdings are read on Ethereum, Base, Arbitrum and Optimism.`
+                  : "Connect a browser wallet to scan your own holdings at live prices."}
               </p>
             </div>
           </div>

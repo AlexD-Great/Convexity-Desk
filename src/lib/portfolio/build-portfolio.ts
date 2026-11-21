@@ -12,7 +12,7 @@
  */
 
 import type { BetaBucket, Portfolio, PortfolioAsset } from "@/types";
-import { getPrices, getRealizedVol } from "@/lib/prices/price-service";
+import { getPrices, getRealizedVol, type PriceQuote } from "@/lib/prices/price-service";
 
 export type Holding = {
   symbol: string;
@@ -20,6 +20,9 @@ export type Holding = {
   amount: number;
   betaBucket: BetaBucket;
   hedgeable: boolean;
+  /** Pre-resolved price (wallet reader). Skips the symbol lookup when present. */
+  quote?: PriceQuote;
+  chains?: string[];
 };
 
 /** Used only when an asset has no kline history. */
@@ -41,8 +44,11 @@ export async function buildPortfolio(
 
   const priced = await Promise.all(
     holdings.map(async (h) => {
-      const quote = quotes[h.symbol.toUpperCase()] ?? null;
-      const realized = await getRealizedVol(quote);
+      const looked = quotes[h.symbol.toUpperCase()] ?? null;
+      const quote = h.quote ?? looked;
+      // Volatility needs a SoDEX market; the looked-up quote has one even when
+      // the price itself came from elsewhere.
+      const realized = await getRealizedVol(looked?.venueSymbol ? looked : quote);
       const vol = realized ?? BUCKET_VOL[h.betaBucket];
       const priceUsd = quote?.priceUsd ?? 0;
       return {
@@ -73,6 +79,7 @@ export async function buildPortfolio(
     change24hPct: p.quote?.change24hPct,
     volatility30d: round(p.vol, 3),
     volatilitySource: p.volSource,
+    chains: p.h.chains,
   }));
 
   return {

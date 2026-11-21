@@ -1,14 +1,24 @@
 import { NextResponse } from "next/server";
-import { getDemoPortfolio } from "@/lib/data/demo-portfolio";
 import { getSoSoValueIntelligence } from "@/lib/adapters/sosovalue";
 import { getSoDEXMarketData } from "@/lib/adapters/sodex";
 import { calculateDangerScore } from "@/lib/risk/convexity-score";
+import { PortfolioError, readScanTarget, resolvePortfolio } from "@/lib/portfolio/resolve-portfolio";
 
 export const dynamic = "force-dynamic";
 
-export async function POST() {
-  const [portfolio, intelligenceResult, marketResult] = await Promise.all([
-    getDemoPortfolio(),
+/** POST body: {} for the demo holdings, or { address: "0x…" } for a wallet. */
+export async function POST(request: Request) {
+  const target = await readScanTarget(request);
+  let resolved;
+  try {
+    resolved = await resolvePortfolio(target);
+  } catch (err) {
+    const status = err instanceof PortfolioError ? err.status : 500;
+    return NextResponse.json({ error: err instanceof Error ? err.message : String(err) }, { status });
+  }
+  const { portfolio } = resolved;
+
+  const [intelligenceResult, marketResult] = await Promise.all([
     getSoSoValueIntelligence(),
     getSoDEXMarketData(),
   ]);
@@ -21,6 +31,9 @@ export async function POST() {
 
   return NextResponse.json({
     scan,
+    portfolio,
+    portfolioSource: resolved.source,
+    wallet: resolved.wallet,
     evidenceCards: intelligenceResult.data.evidenceCards,
     dataMode: {
       sosovalue: intelligenceResult.mode,
@@ -44,8 +57,8 @@ export async function POST() {
         mode: marketResult.mode,
         label:
           marketResult.mode === "live"
-            ? "SoDEX: Live public market read"
-            : "SoDEX: Fallback public market data",
+            ? `SoDEX: Live ${marketResult.data.network} market data`
+            : "SoDEX: Fallback sample data",
         reason: marketResult.reason,
         endpoint: marketResult.endpoint,
       },
