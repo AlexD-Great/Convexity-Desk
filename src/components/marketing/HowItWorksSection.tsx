@@ -31,7 +31,7 @@ const STEPS = [
     number: "03",
     icon: FileSearch,
     title: "Review Evidence",
-    body: "Evidence cards surface from SoSoValue intelligence and SoDEX market data — or fallback data when APIs are unavailable.",
+    body: "Evidence cards surface the real numbers behind each factor: SoSoValue ETF flows, news and macro events, plus live SoDEX order books.",
   },
   {
     number: "04",
@@ -43,7 +43,7 @@ const STEPS = [
     number: "05",
     icon: Eye,
     title: "Preview Execution",
-    body: "See a SoDEX-style execution preview: estimated slippage, order type, and coverage before any action is taken.",
+    body: "Check the hedge against the live SoDEX order book: estimated entry, slippage and cost before anything is confirmed.",
   },
   {
     number: "06",

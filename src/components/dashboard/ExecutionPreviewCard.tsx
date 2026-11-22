@@ -42,7 +42,7 @@ export function ExecutionPreviewCard({ preview }: ExecutionPreviewCardProps) {
       label: "Liquidity Score",
       value: `${preview.liquidityScore} / 100`,
     },
-    { label: "Order Type", value: preview.orderType.toUpperCase() },
+    { label: "Order Type", value: `${preview.orderType.toUpperCase()} · PAPER` },
   ];
 
   return (

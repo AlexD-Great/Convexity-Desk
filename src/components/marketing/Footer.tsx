@@ -18,9 +18,9 @@ const LINKS = {
   ],
   Ecosystem: [
     { label: "SoSoValue", href: "https://sosovalue.com" },
-    { label: "SoDEX", href: "#" },
-    { label: "SSI Index", href: "#" },
-    { label: "ValueChain", href: "#" },
+    { label: "SoDEX", href: "https://sodex.com" },
+    { label: "SSI Index", href: "https://ssi.sosovalue.com" },
+    { label: "ValueChain", href: "https://valuechain.xyz" },
   ],
   Project: [
     { label: "Methodology", href: "/methodology" },

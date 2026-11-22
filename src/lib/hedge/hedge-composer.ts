@@ -294,7 +294,7 @@ export function composeHedgePlan(
     portfolioValueUsd: portfolio.totalValueUsd,
     coveragePercent: coverage,
     confidence,
-    orderType: "simulation",
+    orderType: "market",
     estimatedSlippageBps: 0, // filled in execution preview
     rationale,
     risks,

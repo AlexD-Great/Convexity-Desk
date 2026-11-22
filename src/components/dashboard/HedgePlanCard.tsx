@@ -46,7 +46,7 @@ export function HedgePlanCard({ plan, dangerScore }: HedgePlanCardProps) {
               {dir.label}
             </span>
           </div>
-          <Badge variant="default">{plan.orderType.toUpperCase()}</Badge>
+          <Badge variant="default">PAPER HEDGE</Badge>
         </div>
       </div>
 
